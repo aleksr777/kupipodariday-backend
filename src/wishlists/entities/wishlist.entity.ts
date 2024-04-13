@@ -13,8 +13,15 @@ export class Wishlist {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, (user) => user.wishlists)
-  user: User;
+  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
+
+  @UpdateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP',
+  })
+  updatedAt: Date;
 
   @Column({ length: 250 })
   name: string;
@@ -28,13 +35,6 @@ export class Wishlist {
   @Column('simple-array')
   items: string[];
 
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date;
-
-  @UpdateDateColumn({
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
-    onUpdate: 'CURRENT_TIMESTAMP',
-  })
-  updatedAt: Date;
+  @ManyToOne(() => User, (user) => user.wishlists)
+  user: User;
 }

@@ -9,8 +9,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Wish } from '../../wishes/entities/wish.entity';
-import { Wishlist } from '../../wishlists/entities/wishlist.entity';
 import { Offer } from '../../offers/entities/offer.entity';
+import { Wishlist } from '../../wishlists/entities/wishlist.entity';
 
 @Entity()
 export class User {
@@ -46,9 +46,9 @@ export class User {
   @JoinTable()
   wishes: Wish[];
 
-  @OneToMany(() => Wishlist, (wishlist) => wishlist.user)
-  wishlists: Wishlist[];
-
   @OneToMany(() => Offer, (offer) => offer.user)
   offers: Offer[];
+
+  @OneToMany(() => Wishlist, (wishlist) => wishlist.user)
+  wishlists: Wishlist[];
 }

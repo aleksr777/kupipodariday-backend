@@ -46,9 +46,9 @@ export class Wish {
   @Column({ length: 1024 })
   description: string;
 
-  @Column({ default: 0 })
-  copied: number;
-
   @OneToMany(() => Offer, (offer) => offer.wish)
   offers: Offer[];
+
+  @Column({ default: 0 })
+  copied: number;
 }

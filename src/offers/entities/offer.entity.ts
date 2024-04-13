@@ -14,11 +14,18 @@ export class Offer {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
+
+  @UpdateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP',
+  })
+  updatedAt: Date;
+
   @ManyToOne(() => User, (user) => user.offers)
   user: User;
-
-  @ManyToOne(() => Wish, (wish) => wish.offers)
-  wish: Wish;
 
   @Column()
   item: string;
@@ -29,13 +36,6 @@ export class Offer {
   @Column({ default: false })
   hidden: boolean;
 
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date;
-
-  @UpdateDateColumn({
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
-    onUpdate: 'CURRENT_TIMESTAMP',
-  })
-  updatedAt: Date;
+  @ManyToOne(() => Wish, (wish) => wish.offers)
+  wish: Wish;
 }
