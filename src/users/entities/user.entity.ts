@@ -3,6 +3,8 @@ import {
   PrimaryGeneratedColumn,
   Column,
   OneToMany,
+  ManyToMany,
+  JoinTable,
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -14,6 +16,16 @@ import { Offer } from '../../offers/entities/offer.entity';
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
+
+  @UpdateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP',
+  })
+  updatedAt: Date;
 
   @Column({ unique: true, length: 30 })
   username: string;
@@ -30,7 +42,8 @@ export class User {
   @Column()
   password: string;
 
-  @OneToMany(() => Wish, (wish) => wish.user)
+  @ManyToMany(() => Wish)
+  @JoinTable()
   wishes: Wish[];
 
   @OneToMany(() => Wishlist, (wishlist) => wishlist.user)
@@ -38,14 +51,4 @@ export class User {
 
   @OneToMany(() => Offer, (offer) => offer.user)
   offers: Offer[];
-
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date;
-
-  @UpdateDateColumn({
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
-    onUpdate: 'CURRENT_TIMESTAMP',
-  })
-  updatedAt: Date;
 }

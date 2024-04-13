@@ -2,7 +2,7 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  ManyToOne,
+  ManyToMany,
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
@@ -15,8 +15,15 @@ export class Wish {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, (user) => user.wishes)
-  user: User;
+  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
+
+  @UpdateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP',
+  })
+  updatedAt: Date;
 
   @Column({ length: 250 })
   name: string;
@@ -33,22 +40,15 @@ export class Wish {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   raised: number;
 
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date;
-
-  @UpdateDateColumn({
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
-    onUpdate: 'CURRENT_TIMESTAMP',
-  })
-  updatedAt: Date;
-
-  @OneToMany(() => Offer, (offer) => offer.wish)
-  offers: Offer[];
+  @ManyToMany(() => User)
+  owner: User[];
 
   @Column({ length: 1024 })
   description: string;
 
   @Column({ default: 0 })
   copied: number;
+
+  @OneToMany(() => Offer, (offer) => offer.wish)
+  offers: Offer[];
 }

@@ -25,15 +25,23 @@ export class UsersService {
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    return this.userRepository.save(createUserDto);
+    const createdUser = await this.userRepository.save(createUserDto);
+    return createdUser;
   }
 
   async updateOne(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+    const existingUser = await this.findOne(id);
+    if (!existingUser) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
     await this.userRepository.update({ id }, updateUserDto);
     return this.findOne(id);
   }
 
   async removeOne(id: number): Promise<void> {
-    await this.userRepository.delete({ id });
+    const result = await this.userRepository.delete({ id });
+    if (result.affected === 0) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
   }
 }
