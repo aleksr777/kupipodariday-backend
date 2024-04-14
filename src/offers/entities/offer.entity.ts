@@ -24,9 +24,6 @@ export class Offer {
   })
   updatedAt: Date;
 
-  @ManyToOne(() => User, (user) => user.offers)
-  user: User;
-
   @Column()
   item: string;
 
@@ -35,6 +32,9 @@ export class Offer {
 
   @Column({ default: false })
   hidden: boolean;
+
+  @ManyToOne(() => User, (user) => user.offers)
+  user: User;
 
   @ManyToOne(() => Wish, (wish) => wish.offers)
   wish: Wish;

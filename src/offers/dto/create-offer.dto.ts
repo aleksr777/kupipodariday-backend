@@ -1,13 +1,7 @@
 import { IsNumber, IsString, IsBoolean } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateOfferDto {
-  constructor(partial: Partial<CreateOfferDto>) {
-    Object.assign(this, partial);
-    if (!isNaN(this.amount)) {
-      this.amount = parseFloat(this.amount.toFixed(2)); // Округляем до двух знаков после запятой
-    }
-  }
-
   @IsNumber()
   user: number;
 
@@ -15,8 +9,9 @@ export class CreateOfferDto {
   item: string;
 
   @IsNumber()
+  @Transform(({ value }) => parseFloat(value).toFixed(2))
   amount: number;
 
   @IsBoolean()
-  hidden?: boolean;
+  hidden?: boolean = false;
 }

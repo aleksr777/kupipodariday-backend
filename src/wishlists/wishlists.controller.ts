@@ -35,11 +35,11 @@ export class WishlistsController {
     @Param('id') id: string,
     @Body() updateWishlistDto: UpdateWishlistDto,
   ) {
-    return this.wishlistsService.update(+id, updateWishlistDto);
+    return this.wishlistsService.updateOne(+id, updateWishlistDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.wishlistsService.remove(+id);
+    return this.wishlistsService.removeOne(+id);
   }
 }

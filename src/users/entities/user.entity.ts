@@ -42,13 +42,12 @@ export class User {
   @Column()
   password: string;
 
-  @ManyToMany(() => Wish)
-  @JoinTable()
+  @OneToMany(() => Wish, (wish) => wish.owner)
   wishes: Wish[];
 
   @OneToMany(() => Offer, (offer) => offer.user)
   offers: Offer[];
 
-  @OneToMany(() => Wishlist, (wishlist) => wishlist.user)
-  wishlists: Wishlist[];
+  @OneToMany(() => Wishlist, (wishlist) => wishlist.owner)
+  wishlist: Wishlist[];
 }

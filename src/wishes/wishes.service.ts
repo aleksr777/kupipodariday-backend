@@ -25,17 +25,16 @@ export class WishesService {
   }
 
   async create(createWishDto: CreateWishDto): Promise<Wish> {
-    const createdWish = await this.wishRepository.save(createWishDto);
-    return createdWish;
+    return await this.wishRepository.save(createWishDto);
   }
 
   async updateOne(id: number, updateWishDto: UpdateWishDto): Promise<Wish> {
-    const existingWish = await this.findOne(id);
-    if (!existingWish) {
+    const result = await this.wishRepository.update({ id }, updateWishDto);
+    if (result.affected === 0) {
       throw new NotFoundException(`Wish with ID ${id} not found`);
+    } else {
+      return await this.findOne(id);
     }
-    await this.wishRepository.update({ id }, updateWishDto);
-    return this.findOne(id);
   }
 
   async removeOne(id: number): Promise<void> {
