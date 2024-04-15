@@ -39,7 +39,8 @@ export class WishlistsService {
   ): Promise<Wishlist> {
     const wishlist = await this.findOne(id);
     wishlist.name = updateWishlistDto.name || wishlist.name;
-    wishlist.description = updateWishlistDto.description || wishlist.description;
+    wishlist.description =
+      updateWishlistDto.description || wishlist.description;
     wishlist.image = updateWishlistDto.image || wishlist.image;
     wishlist.items = updateWishlistDto.items || wishlist.items;
     return await this.wishlistRepository.save(wishlist);
