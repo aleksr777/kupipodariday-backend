@@ -25,22 +25,24 @@ export class WishlistsService {
   }
 
   async create(createWishlistDto: CreateWishlistDto): Promise<Wishlist> {
-    return await this.wishlistRepository.save(createWishlistDto);
+    const wishlist = new Wishlist();
+    wishlist.name = createWishlistDto.name;
+    wishlist.description = createWishlistDto.description;
+    wishlist.image = createWishlistDto.image;
+    wishlist.items = createWishlistDto.items;
+    return await this.wishlistRepository.save(wishlist);
   }
 
   async updateOne(
     id: number,
     updateWishlistDto: UpdateWishlistDto,
   ): Promise<Wishlist> {
-    const result = await this.wishlistRepository.update(
-      { id },
-      updateWishlistDto,
-    );
-    if (result.affected === 0) {
-      throw new NotFoundException(`Wishlist with ID ${id} not found`);
-    } else {
-      return await this.findOne(id);
-    }
+    const wishlist = await this.findOne(id);
+    wishlist.name = updateWishlistDto.name || wishlist.name;
+    wishlist.description = updateWishlistDto.description || wishlist.description;
+    wishlist.image = updateWishlistDto.image || wishlist.image;
+    wishlist.items = updateWishlistDto.items || wishlist.items;
+    return await this.wishlistRepository.save(wishlist);
   }
 
   async removeOne(id: number): Promise<void> {
