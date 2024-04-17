@@ -49,5 +49,5 @@ export class User {
   offers: Offer[];
 
   @OneToMany(() => Wishlist, (wishlist) => wishlist.owner)
-  wishlist: Wishlist[];
+  wishlists: Wishlist[];
 }
