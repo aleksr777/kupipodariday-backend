@@ -1,17 +1,9 @@
-import { IsNumber, IsString, IsBoolean } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateOfferDto {
-  @IsNumber()
-  user: number;
-
-  @IsString()
-  item: string;
-
-  @IsNumber()
-  @Transform(({ value }) => parseFloat(value).toFixed(2))
+  @ApiProperty()
   amount: number;
 
-  @IsBoolean()
-  hidden?: boolean = false;
+  @ApiProperty()
+  hidden?: boolean;
 }

@@ -3,11 +3,10 @@ import {
   PrimaryGeneratedColumn,
   Column,
   OneToMany,
-  ManyToMany,
-  JoinTable,
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { IsString, IsUrl, IsEmail, IsNotEmpty, Length } from 'class-validator';
 import { Wish } from '../../wishes/entities/wish.entity';
 import { Offer } from '../../offers/entities/offer.entity';
 import { Wishlist } from '../../wishlists/entities/wishlist.entity';
@@ -27,19 +26,29 @@ export class User {
   })
   updatedAt: Date;
 
-  @Column({ unique: true, length: 30 })
+  @Column({ unique: true })
+  @IsNotEmpty()
+  @IsString()
+  @Length(2, 30)
   username: string;
 
-  @Column({ length: 200, default: 'Пока ничего не рассказал о себе' })
+  @Column({ default: 'Пока ничего не рассказал о себе' })
+  @IsString()
+  @Length(2, 200)
   about: string;
 
   @Column({ default: 'https://i.pravatar.cc/300' })
+  @IsUrl()
   avatar: string;
 
   @Column({ unique: true })
+  @IsNotEmpty()
+  @IsEmail()
   email: string;
 
   @Column()
+  @IsNotEmpty()
+  @IsString()
   password: string;
 
   @OneToMany(() => Wish, (wish) => wish.owner)

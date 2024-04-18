@@ -1,34 +1,24 @@
-import { IsNotEmpty, IsString, IsUrl, IsNumber, Min } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateWishDto {
-  @IsNotEmpty()
-  @IsString()
+  @ApiProperty()
   name: string;
 
-  @IsNotEmpty()
-  @IsUrl()
+  @ApiProperty()
   link: string;
 
-  @IsNotEmpty()
-  @IsUrl()
+  @ApiProperty()
   image: string;
 
-  @IsNotEmpty()
-  @IsNumber()
-  @Min(0)
+  @ApiProperty()
   price: number;
 
-  @IsNotEmpty()
-  @IsNumber()
-  @Min(0)
+  @ApiProperty()
   raised: number;
 
-  @IsNotEmpty()
-  @IsString()
+  @ApiProperty()
   description: string;
 
-  @IsNotEmpty()
-  @IsNumber()
-  @Min(0)
+  @ApiProperty()
   copied: number;
 }

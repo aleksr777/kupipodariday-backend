@@ -1,28 +1,15 @@
-import {
-  IsString,
-  MaxLength,
-  MinLength,
-  IsArray,
-  ValidateNested,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { Wish } from '../../wishes/entities/wish.entity';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateWishlistDto {
-  @IsString()
-  @MinLength(1)
-  @MaxLength(250)
+  @ApiProperty()
   name: string;
 
-  @IsString()
-  @MaxLength(1500)
+  @ApiProperty()
   description: string;
 
-  @IsString()
+  @ApiProperty()
   image: string;
 
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => Wish)
-  items: Wish[];
+  @ApiProperty()
+  items: number[];
 }
