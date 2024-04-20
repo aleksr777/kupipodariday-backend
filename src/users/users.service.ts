@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -12,23 +17,56 @@ export class UsersService {
     private userRepository: Repository<User>,
   ) {}
 
-  async findOne(id: number) {
-    console.log('findOne');
+  async findOne(id: number): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      console.log(`Пользователь с ID:${id} не найден`);
+      throw new NotFoundException(`Пользователь с ID:${id} не найден`);
+    }
+    return user;
   }
 
-  async findAll() {
-    console.log('findAll');
+  async findAll(): Promise<User[]> {
+    return await this.userRepository.find();
   }
 
-  async create(createUserDto: CreateUserDto) {
-    console.log('create');
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    const user = this.userRepository.create(createUserDto);
+    try {
+      return await this.userRepository.save(user);
+    } catch (error) {
+      if (error?.code === '23505') {
+        console.log(
+          'Пользователь с такими уникальными данными уже существует.',
+        );
+        throw new ConflictException(
+          'Пользователь с такими уникальными данными уже существует.',
+        );
+      }
+      console.log('Не удалось сохранить нового пользователя в базе данных.');
+      throw new InternalServerErrorException(
+        'Не удалось сохранить нового пользователя в базе данных.',
+      );
+    }
   }
 
-  async updateOne(id: number, updateUserDto: UpdateUserDto) {
-    console.log('updateOne');
+  async updateOne(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+    const result = await this.userRepository.update({ id }, updateUserDto);
+    if (result.affected === 0) {
+      console.log(`Пользователь с ID:${id} не найден`);
+      throw new NotFoundException(`Пользователь с ID:${id} не найден`);
+    } else {
+      return await this.findOne(id);
+    }
   }
 
-  async removeOne(id: number) {
-    console.log('removeOne');
+  async removeOne(id: number): Promise<void> {
+    const result = await this.userRepository.delete({ id });
+    if (result.affected === 0) {
+      console.log(`Пользователь с ID:${id} не найден`);
+      throw new NotFoundException(`Пользователь с ID:${id} не найден`);
+    }
+    console.log(`Пользователь с ID:${id} не найден`);
+    throw new NotFoundException(`Пользователь с ID:${id} не найден`);
   }
 }
