@@ -12,35 +12,23 @@ export class WishesService {
     private readonly wishRepository: Repository<Wish>,
   ) {}
 
-  async findOne(id: number): Promise<Wish> {
-    const wish = await this.wishRepository.findOne({ where: { id } });
-    if (!wish) {
-      throw new NotFoundException(`Wish with ID ${id} not found`);
-    }
-    return wish;
+  async findOne(id: number) {
+    console.log('findOne');
   }
 
-  async findAll(): Promise<Wish[]> {
-    return await this.wishRepository.find();
+  async findAll() {
+    console.log('findAll');
   }
 
-  async create(createWishDto: CreateWishDto): Promise<Wish> {
-    return await this.wishRepository.save(createWishDto);
+  async create(createWishDto: CreateWishDto) {
+    console.log('create');
   }
 
-  async updateOne(id: number, updateWishDto: UpdateWishDto): Promise<Wish> {
-    const result = await this.wishRepository.update({ id }, updateWishDto);
-    if (result.affected === 0) {
-      throw new NotFoundException(`Wish with ID ${id} not found`);
-    } else {
-      return await this.findOne(id);
-    }
+  async updateOne(id: number, updateWishDto: UpdateWishDto) {
+    console.log('updateOne');
   }
 
-  async removeOne(id: number): Promise<void> {
-    const result = await this.wishRepository.delete({ id });
-    if (result.affected === 0) {
-      throw new NotFoundException(`Wish with ID ${id} not found`);
-    }
+  async removeOne(id: number) {
+    console.log('removeOne');
   }
 }

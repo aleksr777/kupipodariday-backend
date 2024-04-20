@@ -11,5 +11,5 @@ export class CreateWishlistDto {
   image: string;
 
   @ApiProperty()
-  items: number[];
+  itemsId: number[];
 }

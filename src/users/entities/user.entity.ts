@@ -6,7 +6,14 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { IsString, IsUrl, IsEmail, IsNotEmpty, Length } from 'class-validator';
+import {
+  IsString,
+  IsUrl,
+  IsEmail,
+  IsNotEmpty,
+  Length,
+  IsArray,
+} from 'class-validator';
 import { Wish } from '../../wishes/entities/wish.entity';
 import { Offer } from '../../offers/entities/offer.entity';
 import { Wishlist } from '../../wishlists/entities/wishlist.entity';
@@ -16,18 +23,22 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date;
+  @CreateDateColumn({
+    type: 'timestamp',
+    name: 'createDate',
+    default: () => 'LOCALTIMESTAMP',
+  })
+  createDate: string;
 
   @UpdateDateColumn({
     type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
+    name: 'updateDate',
+    default: () => 'LOCALTIMESTAMP',
     onUpdate: 'CURRENT_TIMESTAMP',
   })
-  updatedAt: Date;
+  updateDate: string;
 
   @Column({ unique: true })
-  @IsNotEmpty()
   @IsString()
   @Length(2, 30)
   username: string;
@@ -52,11 +63,14 @@ export class User {
   password: string;
 
   @OneToMany(() => Wish, (wish) => wish.owner)
+  @IsArray()
   wishes: Wish[];
 
   @OneToMany(() => Offer, (offer) => offer.user)
+  @IsArray()
   offers: Offer[];
 
   @OneToMany(() => Wishlist, (wishlist) => wishlist.owner)
+  @IsArray()
   wishlists: Wishlist[];
 }

@@ -7,7 +7,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { IsNumber, IsBoolean } from 'class-validator';
-import { Transform } from 'class-transformer';
 import { User } from '../../users/entities/user.entity';
 import { Wish } from '../../wishes/entities/wish.entity';
 
@@ -16,19 +15,23 @@ export class Offer {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date;
+  @CreateDateColumn({
+    type: 'timestamp',
+    name: 'createDate',
+    default: () => 'LOCALTIMESTAMP',
+  })
+  createDate: string;
 
   @UpdateDateColumn({
     type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
+    name: 'updateDate',
+    default: () => 'LOCALTIMESTAMP',
     onUpdate: 'CURRENT_TIMESTAMP',
   })
-  updatedAt: Date;
+  updateDate: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   @IsNumber()
-  @Transform(({ value }) => parseFloat(value).toFixed(2))
   amount: number;
 
   @Column({ default: false })

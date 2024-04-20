@@ -12,44 +12,23 @@ export class WishlistsService {
     private readonly wishlistRepository: Repository<Wishlist>,
   ) {}
 
-  async findOne(id: number): Promise<Wishlist> {
-    const wishlist = await this.wishlistRepository.findOne({ where: { id } });
-    if (!wishlist) {
-      throw new NotFoundException(`Wishlist with ID ${id} not found`);
-    }
-    return wishlist;
+  async findOne(id: number) {
+    console.log('findOne');
   }
 
-  async findAll(): Promise<Wishlist[]> {
-    return await this.wishlistRepository.find();
+  async findAll() {
+    console.log('findAll');
   }
 
-  async create(createWishlistDto: CreateWishlistDto): Promise<Wishlist> {
-    const wishlist = new Wishlist();
-    wishlist.name = createWishlistDto.name;
-    wishlist.description = createWishlistDto.description;
-    wishlist.image = createWishlistDto.image;
-    wishlist.items = createWishlistDto.items;
-    return await this.wishlistRepository.save(wishlist);
+  async create(createWishlistDto: CreateWishlistDto) {
+    console.log('create');
   }
 
-  async updateOne(
-    id: number,
-    updateWishlistDto: UpdateWishlistDto,
-  ): Promise<Wishlist> {
-    const wishlist = await this.findOne(id);
-    wishlist.name = updateWishlistDto.name || wishlist.name;
-    wishlist.description =
-      updateWishlistDto.description || wishlist.description;
-    wishlist.image = updateWishlistDto.image || wishlist.image;
-    wishlist.items = updateWishlistDto.items || wishlist.items;
-    return await this.wishlistRepository.save(wishlist);
+  async updateOne(id: number, updateWishlistDto: UpdateWishlistDto) {
+    console.log('updateOne');
   }
 
-  async removeOne(id: number): Promise<void> {
-    const result = await this.wishlistRepository.delete({ id });
-    if (result.affected === 0) {
-      throw new NotFoundException(`Wishlist with ID ${id} not found`);
-    }
+  async removeOne(id: number) {
+    console.log('removeOne');
   }
 }

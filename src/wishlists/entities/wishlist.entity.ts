@@ -8,14 +8,7 @@ import {
   JoinTable,
   ManyToMany,
 } from 'typeorm';
-import {
-  IsString,
-  IsNotEmpty,
-  Length,
-  IsArray,
-  IsNumber,
-  IsUrl,
-} from 'class-validator';
+import { IsString, IsNotEmpty, Length, IsArray, IsUrl } from 'class-validator';
 import { User } from '../../users/entities/user.entity';
 import { Wish } from '../../wishes/entities/wish.entity';
 
@@ -24,24 +17,27 @@ export class Wishlist {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date;
+  @CreateDateColumn({
+    type: 'timestamp',
+    name: 'createDate',
+    default: () => 'LOCALTIMESTAMP',
+  })
+  createDate: string;
 
   @UpdateDateColumn({
     type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
+    name: 'updateDate',
+    default: () => 'LOCALTIMESTAMP',
     onUpdate: 'CURRENT_TIMESTAMP',
   })
-  updatedAt: Date;
+  updateDate: string;
 
   @Column()
-  @IsNotEmpty()
   @Length(1, 250)
   @IsString()
   name: string;
 
   @Column()
-  @IsNotEmpty()
   @Length(1, 250)
   @IsString()
   description: string;
@@ -51,12 +47,11 @@ export class Wishlist {
   @IsUrl()
   image: string;
 
-  @ManyToMany(() => Wish, (wish) => wish.name)
+  @ManyToMany(() => Wish)
   @JoinTable()
   @IsArray()
-  @IsNumber({}, { each: true })
   items: Wish[];
 
-  @ManyToOne(() => User, (user) => user.wishlists)
+  @ManyToOne(() => User)
   owner: User;
 }

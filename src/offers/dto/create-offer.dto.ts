@@ -5,5 +5,8 @@ export class CreateOfferDto {
   amount: number;
 
   @ApiProperty()
-  hidden?: boolean;
+  hidden: boolean;
+
+  @ApiProperty()
+  itemId: number;
 }
