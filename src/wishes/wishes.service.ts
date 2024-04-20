@@ -34,7 +34,7 @@ export class WishesService {
     return this.wishRepository
       .save(wishDto)
       .then((res) => {
-        console.log(`Новый пользователь успешно создан`);
+        console.log(`Новое желание успешно создано`);
         return res;
       })
       .catch((err) => {
