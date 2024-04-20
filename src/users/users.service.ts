@@ -1,3 +1,4 @@
+import { Like } from 'typeorm';
 import {
   Injectable,
   NotFoundException,
@@ -9,6 +10,7 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { QueryUserDto } from './dto/query-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -30,8 +32,15 @@ export class UsersService {
     return user;
   }
 
-  async findByQuery(query: string): Promise<User[]> {
-    const users = this.userRepository.find({ where: { username: query } });
+  async findByQuery(queryUserDto: QueryUserDto): Promise<User[]> {
+    const query = queryUserDto.query;
+    const users = this.userRepository.find({
+      where: [
+        { email: query },
+        { username: Like(`%${query}%`) },
+        { about: Like(`%${query}%`) },
+      ],
+    });
     if (!users) {
       console.log(`Пользователи не найдены`);
       throw new NotFoundException(`Пользователи не найдены`);

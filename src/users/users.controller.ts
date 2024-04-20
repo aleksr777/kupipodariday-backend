@@ -56,7 +56,7 @@ export class UsersController {
   @Post('find')
   @HttpCode(HttpStatus.OK)
   findByQuery(@Body() queryUserDto: QueryUserDto) {
-    return this.usersService.findByQuery(queryUserDto.query);
+    return this.usersService.findByQuery(queryUserDto);
   }
 
   @Get(':username')
