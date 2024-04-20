@@ -17,17 +17,26 @@ export class UsersService {
     private userRepository: Repository<User>,
   ) {}
 
-  async findOne(id: number): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { id } });
+  async findAll(): Promise<User[]> {
+    return await this.userRepository.find();
+  }
+
+  async findOne(username: string): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { username } });
     if (!user) {
-      console.log(`Пользователь с ID:${id} не найден`);
-      throw new NotFoundException(`Пользователь с ID:${id} не найден`);
+      console.log(`Пользователь ${username} не найден`);
+      throw new NotFoundException(`Пользователь ${username} не найден`);
     }
     return user;
   }
 
-  async findAll(): Promise<User[]> {
-    return await this.userRepository.find();
+  async findByQuery(query: string): Promise<User[]> {
+    const users = this.userRepository.find({ where: { username: query } });
+    if (!users) {
+      console.log(`Пользователи не найдены`);
+      throw new NotFoundException(`Пользователи не найдены`);
+    }
+    return users;
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -61,7 +70,7 @@ export class UsersService {
       throw new NotFoundException(`Пользователь с ID:${id} не найден`);
     } else {
       console.log(`Пользователь с ID:${id} успешно уобновлён`);
-      return await this.findOne(id);
+      return await this.userRepository.findOne({ where: { id } });
     }
   }
 
@@ -72,5 +81,21 @@ export class UsersService {
       throw new NotFoundException(`Пользователь с ID:${id} не найден`);
     }
     console.log(`Пользователь с ID:${id} успешно удалён`);
+  }
+
+  async updateProfile(updateUserDto: UpdateUserDto) {
+    console.log(`Обновление данных профиля`);
+  }
+
+  async getOwnUser() {
+    console.log(`Получение данных профиля`);
+  }
+
+  async getOwnWishes() {
+    console.log(`Получение пожеланий профиля`);
+  }
+
+  async getAnotherUserWishes(username: string) {
+    console.log(`Получение пожеланий пользователя`);
   }
 }
