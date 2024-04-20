@@ -58,10 +58,10 @@ export class Wish {
   @IsNumber()
   price: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ default: 0, type: 'decimal', precision: 10, scale: 2 })
   @IsNotEmpty()
   @IsNumber()
-  raised: number;
+  raised: number = 0;
 
   @Column()
   @Length(1, 1024)
@@ -71,7 +71,7 @@ export class Wish {
   @Column({ default: 0 })
   @IsNotEmpty()
   @IsNumber()
-  copied: number;
+  copied: number = 0;
 
   @ManyToOne(() => User, (owner) => owner.wishes)
   owner: User;

@@ -12,4 +12,10 @@ export class CreateWishDto {
 
   @ApiProperty()
   price: number;
+
+  @ApiProperty()
+  description: string;
+
+  @ApiProperty()
+  copied: number = 0;
 }
