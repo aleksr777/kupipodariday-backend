@@ -22,7 +22,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('me')
-  async getOwnUser(@Request() req) {
+  async getProfileData(@Request() req) {
     return this.usersService.findOne(req?.user?.id);
   }
 
@@ -32,23 +32,23 @@ export class UsersController {
   }
 
   @Get('me/wishes')
-  async getOwnWishes(@Request() req) {
+  async getProfileWishes(@Request() req) {
     return this.usersService.getWishes(req?.user?.id);
   }
 
   @Get(':username')
-  async findByName(@Param('username') username: string) {
+  async findUserByName(@Param('username') username: string) {
     return this.usersService.findByName(username);
   }
 
   @Get(':username/wishes')
-  async getAnotherUserWishes(@Param('username') username: string) {
+  async getUserWishes(@Param('username') username: string) {
     return this.usersService.getAnotherUserWishes(username);
   }
 
   @Post('find')
   @HttpCode(HttpStatus.OK)
-  findByQuery(@Body() queryUserDto: QueryUserDto) {
+  findUserByQuery(@Body() queryUserDto: QueryUserDto) {
     return this.usersService.findByQuery(queryUserDto);
   }
 }

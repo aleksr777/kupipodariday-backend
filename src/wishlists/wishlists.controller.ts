@@ -19,22 +19,22 @@ export class WishlistsController {
   constructor(private readonly wishlistsService: WishlistsService) {}
 
   @Post()
-  create(@Body() createWishlistDto: CreateWishlistDto) {
+  createWishlist(@Body() createWishlistDto: CreateWishlistDto) {
     return this.wishlistsService.create(createWishlistDto);
   }
 
   @Get()
-  findAll() {
+  findAllWishlists() {
     return this.wishlistsService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOneWishlist(@Param('id') id: string) {
     return this.wishlistsService.findOne(+id);
   }
 
   @Patch(':id')
-  update(
+  updateOneWishlist(
     @Param('id') id: string,
     @Body() updateWishlistDto: UpdateWishlistDto,
   ) {
@@ -42,7 +42,7 @@ export class WishlistsController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  removeOneWishlist(@Param('id') id: string) {
     return this.wishlistsService.removeOne(+id);
   }
 }

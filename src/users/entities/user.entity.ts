@@ -25,18 +25,18 @@ export class User {
 
   @CreateDateColumn({
     type: 'timestamp',
-    name: 'createDate',
+    name: 'createdAt',
     default: () => 'LOCALTIMESTAMP',
   })
-  createDate: string;
+  createdAt: string;
 
   @UpdateDateColumn({
     type: 'timestamp',
-    name: 'updateDate',
+    name: 'updatedAt',
     default: () => 'LOCALTIMESTAMP',
     onUpdate: 'CURRENT_TIMESTAMP',
   })
-  updateDate: string;
+  updatedAt: string;
 
   @Column({ unique: true })
   @IsString()

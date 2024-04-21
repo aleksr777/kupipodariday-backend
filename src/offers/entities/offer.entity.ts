@@ -18,18 +18,18 @@ export class Offer {
 
   @CreateDateColumn({
     type: 'timestamp',
-    name: 'createDate',
+    name: 'createdAt',
     default: () => 'LOCALTIMESTAMP',
   })
-  createDate: string;
+  createdAt: string;
 
   @UpdateDateColumn({
     type: 'timestamp',
-    name: 'updateDate',
+    name: 'updatedAt',
     default: () => 'LOCALTIMESTAMP',
     onUpdate: 'CURRENT_TIMESTAMP',
   })
-  updateDate: string;
+  updatedAt: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   @IsNumber()

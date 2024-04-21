@@ -17,22 +17,22 @@ export class OffersController {
   constructor(private readonly offersService: OffersService) {}
 
   @Post()
-  create(@Body() createOfferDto: CreateOfferDto) {
+  createOffer(@Body() createOfferDto: CreateOfferDto) {
     return this.offersService.create(createOfferDto);
   }
 
   @Get()
-  findAll() {
+  findAllOffers() {
     return this.offersService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOneOffer(@Param('id') id: string) {
     return this.offersService.findOne(+id);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  removeOneOffer(@Param('id') id: string) {
     return this.offersService.removeOne(+id);
   }
 }

@@ -2,6 +2,7 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
+  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
@@ -25,18 +26,18 @@ export class Wish {
 
   @CreateDateColumn({
     type: 'timestamp',
-    name: 'createDate',
+    name: 'createdAt',
     default: () => 'LOCALTIMESTAMP',
   })
-  createDate: string;
+  createdAt: string;
 
   @UpdateDateColumn({
     type: 'timestamp',
-    name: 'updateDate',
+    name: 'updatedAt',
     default: () => 'LOCALTIMESTAMP',
     onUpdate: 'CURRENT_TIMESTAMP',
   })
-  updateDate: string;
+  updatedAt: string;
 
   @Column()
   @Length(1, 250)
@@ -74,6 +75,7 @@ export class Wish {
   copied: number = 0;
 
   @ManyToOne(() => User, (owner) => owner.wishes)
+  @JoinColumn({ name: 'owner_id' })
   owner: User;
 
   @OneToMany(() => Offer, (offer) => offer.wish)

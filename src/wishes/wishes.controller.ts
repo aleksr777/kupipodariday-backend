@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Req,
   Body,
   Patch,
   Param,
@@ -11,7 +12,7 @@ import {
 import { WishesService } from './wishes.service';
 import { CreateWishDto } from './dto/create-wish.dto';
 import { UpdateWishDto } from './dto/update-wish.dto';
-import { JwtGuard } from 'src/auth/guards/jwt-auth.guard';
+import { JwtGuard } from '../auth/guards/jwt-auth.guard';
 
 @UseGuards(JwtGuard)
 @Controller('wishes')
@@ -19,27 +20,46 @@ export class WishesController {
   constructor(private readonly wishesService: WishesService) {}
 
   @Post()
-  create(@Body() createWishDto: CreateWishDto) {
-    return this.wishesService.create(createWishDto);
+  async createOneWish(@Req() req, @Body() createWishDto: CreateWishDto) {
+    return this.wishesService.createOne(req.user, createWishDto);
   }
 
-  @Get()
-  findAll() {
-    return this.wishesService.findAll();
+  @Get('last')
+  async getLastWishes() {
+    return this.wishesService.findLast();
+  }
+
+  @Get('top')
+  async getTopWishes() {
+    return this.wishesService.findTop();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  async findOneWish(@Param('id') id: number) {
     return this.wishesService.findOne(+id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateWishDto: UpdateWishDto) {
-    return this.wishesService.updateOne(+id, updateWishDto);
+  async updateOneWish(
+    @Body() updateWishDto: UpdateWishDto,
+    @Req() req,
+    @Param('id') id: number,
+  ) {
+    const wishId = +id;
+    const userId = +req?.user?.id;
+    return this.wishesService.updateOne(updateWishDto, wishId, userId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.wishesService.removeOne(+id);
+  async removeOneWish(@Param('id') id: number, @Req() req) {
+    const wishId = +id;
+    const userId = +req?.user?.id;
+    return this.wishesService.removeOne(wishId, userId);
+  }
+
+  
+  @Post(':id/copy')
+  async copyOneWish(@Param('id') id: number, @Req() req) {
+    return this.wishesService.copyOne(+id, req.user);
   }
 }
