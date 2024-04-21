@@ -5,13 +5,13 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
+  Request,
   HttpCode,
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
+import { Wish } from '../wishes/entities/wish.entity';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { QueryUserDto } from './dto/query-user.dto';
 import { JwtGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -21,33 +21,28 @@ import { JwtGuard } from 'src/auth/guards/jwt-auth.guard';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
-  }
-
   @Get('me')
-  getOwnUser() {
-    return this.usersService.getOwnUser();
+  async getOwnUser(@Request() req) {
+    return this.usersService.findOne(req?.user?.id);
   }
 
   @Patch('me')
-  updateProfile(@Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.updateProfile(updateUserDto);
+  async updateProfile(@Request() req, @Body() updateUserDto: UpdateUserDto) {
+    return this.usersService.updateOne(req?.user?.id, updateUserDto);
   }
 
   @Get('me/wishes')
-  getOwnWishes() {
-    return this.usersService.getOwnWishes();
+  async getOwnWishes(@Request() req) {
+    return this.usersService.getWishes(req?.user?.id);
   }
 
   @Get(':username')
-  findByName(@Param('username') username: string) {
+  async findByName(@Param('username') username: string) {
     return this.usersService.findByName(username);
   }
 
   @Get(':username/wishes')
-  getAnotherUserWishes(@Param('username') username: string) {
+  async getAnotherUserWishes(@Param('username') username: string) {
     return this.usersService.getAnotherUserWishes(username);
   }
 

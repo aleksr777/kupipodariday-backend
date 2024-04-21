@@ -88,22 +88,7 @@ export class UsersService {
     }
   }
 
-  async removeOne(id: number): Promise<void> {
-    const result = await this.userRepository.delete({ id });
-    if (result.affected === 0) {
-      throw new NotFoundException(`Пользователь с ID:${id} не найден`);
-    }
-  }
-
-  async updateProfile(updateUserDto: UpdateUserDto) {
-    console.log(`Обновление данных профиля`);
-  }
-
-  async getOwnUser() {
-    console.log(`Получение данных профиля`);
-  }
-
-  async getUserWishes(userId: number) {
+  async getWishes(userId: number) {
     const wishes = await this.wishRepository.find({
       where: { owner: { id: userId } },
       relations: ['owner'],
@@ -111,19 +96,19 @@ export class UsersService {
     return wishes;
   }
 
-  async getOwnWishes() {
-    console.log(`Получение пожеланий профиля`);
-  }
-
   async getAnotherUserWishes(username: string) {
     const user = await this.userRepository.findOne({ where: { username } });
     if (!user) {
       throw new NotFoundException(`Пользователь ${username} не найден`);
     }
-    const wishes = await this.getUserWishes(user.id);
-    if (!wishes.length) {
-      throw new NotFoundException(`У пользователя ${username} нет пожеланий.`);
-    }
+    const wishes = await this.getWishes(user.id);
     return wishes;
+  }
+
+  async removeOne(id: number): Promise<void> {
+    const result = await this.userRepository.delete({ id });
+    if (result.affected === 0) {
+      throw new NotFoundException(`Пользователь с ID:${id} не найден`);
+    }
   }
 }
