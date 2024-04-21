@@ -8,27 +8,36 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { Wish } from '../wishes/entities/wish.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { QueryUserDto } from './dto/query-user.dto';
+import { HashService } from '../hash/hash.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Wish)
+    private wishRepository: Repository<Wish>,
+    private hashService: HashService,
   ) {}
 
   async findAll(): Promise<User[]> {
     return await this.userRepository.find();
   }
 
-  async findOne(username: string): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { username } });
+  async findOne(id: number): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
-      console.log(`Пользователь ${username} не найден`);
-      throw new NotFoundException(`Пользователь ${username} не найден`);
+      throw new NotFoundException(`Пользователь c ID:${id} не найден`);
     }
+    return user;
+  }
+
+  async findByName(username: string): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { username } });
     return user;
   }
 
@@ -42,30 +51,28 @@ export class UsersService {
       ],
     });
     if (!users) {
-      console.log(`Пользователи не найдены`);
       throw new NotFoundException(`Пользователи не найдены`);
     }
     return users;
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
+    const hashedPassword = await this.hashService.getHash(
+      createUserDto.password,
+    );
+    createUserDto.password = hashedPassword;
     const userDto = this.userRepository.create(createUserDto);
     return this.userRepository
       .save(userDto)
       .then((res) => {
-        console.log(`Новый пользователь успешно создан`);
         return res;
       })
       .catch((err) => {
         if (err?.code === '23505') {
-          console.log(
-            'Пользователь с такими уникальными данными уже существует.',
-          );
           throw new ConflictException(
             'Пользователь с такими уникальными данными уже существует.',
           );
         }
-        console.log('Не удалось сохранить нового пользователя в базе данных.');
         throw new InternalServerErrorException(
           'Не удалось сохранить нового пользователя в базе данных.',
         );
@@ -75,10 +82,8 @@ export class UsersService {
   async updateOne(id: number, updateUserDto: UpdateUserDto): Promise<User> {
     const result = await this.userRepository.update({ id }, updateUserDto);
     if (result.affected === 0) {
-      console.log(`Пользователь с ID:${id} не найден`);
       throw new NotFoundException(`Пользователь с ID:${id} не найден`);
     } else {
-      console.log(`Пользователь с ID:${id} успешно уобновлён`);
       return await this.userRepository.findOne({ where: { id } });
     }
   }
@@ -86,10 +91,8 @@ export class UsersService {
   async removeOne(id: number): Promise<void> {
     const result = await this.userRepository.delete({ id });
     if (result.affected === 0) {
-      console.log(`Пользователь с ID:${id} не найден`);
       throw new NotFoundException(`Пользователь с ID:${id} не найден`);
     }
-    console.log(`Пользователь с ID:${id} успешно удалён`);
   }
 
   async updateProfile(updateUserDto: UpdateUserDto) {
@@ -100,11 +103,27 @@ export class UsersService {
     console.log(`Получение данных профиля`);
   }
 
+  async getUserWishes(userId: number) {
+    const wishes = await this.wishRepository.find({
+      where: { owner: { id: userId } },
+      relations: ['owner'],
+    });
+    return wishes;
+  }
+
   async getOwnWishes() {
     console.log(`Получение пожеланий профиля`);
   }
 
   async getAnotherUserWishes(username: string) {
-    console.log(`Получение пожеланий пользователя`);
+    const user = await this.userRepository.findOne({ where: { username } });
+    if (!user) {
+      throw new NotFoundException(`Пользователь ${username} не найден`);
+    }
+    const wishes = await this.getUserWishes(user.id);
+    if (!wishes.length) {
+      throw new NotFoundException(`У пользователя ${username} нет пожеланий.`);
+    }
+    return wishes;
   }
 }

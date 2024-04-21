@@ -3,10 +3,9 @@ import { OffersService } from './offers.service';
 import { OffersController } from './offers.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Offer } from './entities/offer.entity';
-import { WishesModule } from '../wishes/wishes.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Offer]), WishesModule],
+  imports: [TypeOrmModule.forFeature([Offer])],
   controllers: [OffersController],
   providers: [OffersService],
 })

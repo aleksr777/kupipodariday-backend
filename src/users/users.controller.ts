@@ -8,12 +8,15 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { QueryUserDto } from './dto/query-user.dto';
+import { JwtGuard } from 'src/auth/guards/jwt-auth.guard';
 
+@UseGuards(JwtGuard)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -23,19 +26,9 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
-  @Get()
-  findAll() {
-    return this.usersService.findAll();
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.updateOne(+id, updateUserDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.removeOne(+id);
+  @Get('me')
+  getOwnUser() {
+    return this.usersService.getOwnUser();
   }
 
   @Patch('me')
@@ -43,29 +36,24 @@ export class UsersController {
     return this.usersService.updateProfile(updateUserDto);
   }
 
-  @Get('me')
-  getOwnUser() {
-    return this.usersService.getOwnUser();
-  }
-
   @Get('me/wishes')
   getOwnWishes() {
     return this.usersService.getOwnWishes();
+  }
+
+  @Get(':username')
+  findByName(@Param('username') username: string) {
+    return this.usersService.findByName(username);
+  }
+
+  @Get(':username/wishes')
+  getAnotherUserWishes(@Param('username') username: string) {
+    return this.usersService.getAnotherUserWishes(username);
   }
 
   @Post('find')
   @HttpCode(HttpStatus.OK)
   findByQuery(@Body() queryUserDto: QueryUserDto) {
     return this.usersService.findByQuery(queryUserDto);
-  }
-
-  @Get(':username')
-  findOne(@Param('username') username: string) {
-    return this.usersService.findOne(username);
-  }
-
-  @Get(':username/wishes')
-  getAnotherUserWishes(@Param('username') username: string) {
-    return this.usersService.getAnotherUserWishes(username);
   }
 }
