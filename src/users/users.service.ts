@@ -28,16 +28,19 @@ export class UsersService {
     return await this.userRepository.find();
   }
 
-  async findOne(id: number): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { id } });
+  async findOne(userId: number): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
-      throw new NotFoundException(`Пользователь c ID:${id} не найден`);
+      throw new NotFoundException(`Пользователь c ID:${userId} не найден`);
     }
     return user;
   }
 
   async findByName(username: string): Promise<User> {
     const user = await this.userRepository.findOne({ where: { username } });
+    if (!user) {
+      throw new NotFoundException(`Такого пользователя нет в базе данных.`);
+    }
     return user;
   }
 
@@ -57,14 +60,15 @@ export class UsersService {
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const hashedPassword = await this.hashService.getHash(
-      createUserDto.password,
-    );
-    createUserDto.password = hashedPassword;
-    const userDto = this.userRepository.create(createUserDto);
+    const userData = createUserDto;
+    const hashedPassword = await this.hashService.getHash(userData.password);
+    userData.password = hashedPassword;
+    const userDto = this.userRepository.create(userData);
     return this.userRepository
       .save(userDto)
       .then((res) => {
+        delete userData.email;
+        delete userData.password;
         return res;
       })
       .catch((err) => {
@@ -79,12 +83,15 @@ export class UsersService {
       });
   }
 
-  async updateOne(id: number, updateUserDto: UpdateUserDto): Promise<User> {
-    const result = await this.userRepository.update({ id }, updateUserDto);
+  async updateOne(userId: number, updateUserDto: UpdateUserDto): Promise<User> {
+    const result = await this.userRepository.update(
+      { id: userId },
+      updateUserDto,
+    );
     if (result.affected === 0) {
-      throw new NotFoundException(`Пользователь с ID:${id} не найден`);
+      throw new NotFoundException(`Пользователь с ID:${userId} не найден`);
     } else {
-      return await this.userRepository.findOne({ where: { id } });
+      return await this.userRepository.findOne({ where: { id: userId } });
     }
   }
 
@@ -96,7 +103,7 @@ export class UsersService {
     return wishes;
   }
 
-  async getAnotherUserWishes(username: string) {
+  async getUserWishes(username: string) {
     const user = await this.userRepository.findOne({ where: { username } });
     if (!user) {
       throw new NotFoundException(`Пользователь ${username} не найден`);

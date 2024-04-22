@@ -38,7 +38,7 @@ export class Offer {
   @Column({ default: false })
   @IsBoolean()
   hidden: boolean = false;
-  
+
   @Column()
   @IsNotEmpty()
   @IsNumber()
@@ -48,6 +48,5 @@ export class Offer {
   user: User;
 
   @ManyToOne(() => Wish, (wish) => wish.offers)
-  @JoinColumn({ name: 'itemId' })
   wish: Wish;
 }

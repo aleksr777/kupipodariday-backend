@@ -64,7 +64,7 @@ export class User {
 
   @OneToMany(() => Wish, (wish) => wish.owner)
   @IsArray()
-  wishes: Wish[];
+  items: Wish[];
 
   @OneToMany(() => Offer, (offer) => offer.user)
   @IsArray()

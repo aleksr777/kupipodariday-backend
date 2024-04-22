@@ -1,12 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsInt, IsArray, IsOptional } from 'class-validator';
 
 export class CreateWishlistDto {
   @ApiProperty()
   name: string;
 
   @ApiProperty()
-  description: string;
+  image: string;
 
   @ApiProperty()
-  image: string;
+  description?: string;
+
+  @IsArray()
+  @IsInt({ each: true })
+  @IsOptional()
+  itemsId: number[];
 }

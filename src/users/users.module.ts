@@ -11,6 +11,6 @@ import { HashModule } from '../hash/hash.module';
   imports: [TypeOrmModule.forFeature([User, Wish]), WishesModule, HashModule],
   controllers: [UsersController],
   providers: [UsersService],
-  exports: [UsersService],
+  exports: [TypeOrmModule, UsersService],
 })
 export class UsersModule {}

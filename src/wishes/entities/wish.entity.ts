@@ -2,7 +2,6 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
@@ -18,6 +17,7 @@ import {
 } from 'class-validator';
 import { User } from '../../users/entities/user.entity';
 import { Offer } from '../../offers/entities/offer.entity';
+import { Wishlist } from '../../wishlists/entities/wishlist.entity';
 
 @Entity()
 export class Wish {
@@ -74,11 +74,13 @@ export class Wish {
   @IsNumber()
   copied: number = 0;
 
-  @ManyToOne(() => User, (owner) => owner.wishes)
-  @JoinColumn({ name: 'owner_id' })
+  @ManyToOne(() => User, (owner) => owner.items)
   owner: User;
 
   @OneToMany(() => Offer, (offer) => offer.wish)
   @IsArray()
   offers: Offer[];
+
+  @ManyToOne(() => Wishlist, (wishlist) => wishlist.items)
+  wishlist: Wishlist;
 }

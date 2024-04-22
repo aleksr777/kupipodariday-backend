@@ -1,6 +1,5 @@
 import { PartialType, ApiProperty } from '@nestjs/swagger';
 import { CreateWishDto } from './create-wish.dto';
-import { CreateUserDto } from '../../users/dto/create-user.dto';
 
 export class UpdateWishDto extends PartialType(CreateWishDto) {
   @ApiProperty()

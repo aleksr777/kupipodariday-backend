@@ -9,6 +9,7 @@ import {
   Delete,
   UseGuards,
 } from '@nestjs/common';
+import { AuthenticatedRequest } from '../types/request';
 import { WishesService } from './wishes.service';
 import { CreateWishDto } from './dto/create-wish.dto';
 import { UpdateWishDto } from './dto/update-wish.dto';
@@ -20,8 +21,11 @@ export class WishesController {
   constructor(private readonly wishesService: WishesService) {}
 
   @Post()
-  async createOneWish(@Req() req, @Body() createWishDto: CreateWishDto) {
-    return this.wishesService.createOne(req.user, createWishDto);
+  async createWish(
+    @Req() req: AuthenticatedRequest,
+    @Body() createWishDto: CreateWishDto,
+  ) {
+    return this.wishesService.create(req.user, createWishDto);
   }
 
   @Get('last')
@@ -42,24 +46,22 @@ export class WishesController {
   @Patch(':id')
   async updateOneWish(
     @Body() updateWishDto: UpdateWishDto,
-    @Req() req,
+    @Req() req: AuthenticatedRequest,
     @Param('id') id: number,
   ) {
-    const wishId = +id;
-    const userId = +req?.user?.id;
-    return this.wishesService.updateOne(updateWishDto, wishId, userId);
+    return this.wishesService.updateOne(updateWishDto, +id, +req.user.id);
   }
 
   @Delete(':id')
-  async removeOneWish(@Param('id') id: number, @Req() req) {
-    const wishId = +id;
-    const userId = +req?.user?.id;
-    return this.wishesService.removeOne(wishId, userId);
+  async removeOneWish(
+    @Param('id') id: number,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.wishesService.removeOne(+id, +req.user.id);
   }
 
-  
   @Post(':id/copy')
-  async copyOneWish(@Param('id') id: number, @Req() req) {
+  async copyOneWish(@Param('id') id: number, @Req() req: AuthenticatedRequest) {
     return this.wishesService.copyOne(+id, req.user);
   }
 }

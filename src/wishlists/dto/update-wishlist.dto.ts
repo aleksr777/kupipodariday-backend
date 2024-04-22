@@ -1,10 +1,10 @@
 import { PartialType, ApiProperty } from '@nestjs/swagger';
 import { CreateWishlistDto } from './create-wishlist.dto';
-import { Wish } from '../../wishes/entities/wish.entity';
+import { IsInt, IsArray, IsOptional } from 'class-validator';
 
 export class UpdateWishlistDto extends PartialType(CreateWishlistDto) {
   @ApiProperty()
-  name: string;
+  name?: string;
 
   @ApiProperty()
   description?: string;
@@ -12,6 +12,8 @@ export class UpdateWishlistDto extends PartialType(CreateWishlistDto) {
   @ApiProperty()
   image?: string;
 
-  @ApiProperty()
-  itemsID: number[] | Wish[];
+  @IsArray()
+  @IsInt({ each: true })
+  @IsOptional()
+  itemsId?: number[];
 }
