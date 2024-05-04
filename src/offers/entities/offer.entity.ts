@@ -5,9 +5,8 @@ import {
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
-  JoinColumn,
 } from 'typeorm';
-import { IsNumber, IsBoolean, IsUrl, IsNotEmpty } from 'class-validator';
+import { IsNumber, IsBoolean } from 'class-validator';
 import { User } from '../../users/entities/user.entity';
 import { Wish } from '../../wishes/entities/wish.entity';
 
@@ -39,14 +38,9 @@ export class Offer {
   @IsBoolean()
   hidden: boolean = false;
 
-  @Column()
-  @IsNotEmpty()
-  @IsNumber()
-  itemId: number;
+  @ManyToOne(() => User, (owner) => owner.offers)
+  owner: User;
 
-  @ManyToOne(() => User, (user) => user.offers)
-  user: User;
-
-  @ManyToOne(() => Wish, (wish) => wish.offers)
-  wish: Wish;
+  @ManyToOne(() => Wish, (item) => item.offers)
+  item: Wish;
 }

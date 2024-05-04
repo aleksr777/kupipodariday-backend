@@ -1,14 +1,22 @@
 import {
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Wishlist } from './entities/wishlist.entity';
 import { Wish } from '../wishes/entities/wish.entity';
 import { User } from '../users/entities/user.entity';
 import { CreateWishlistDto } from './dto/create-wishlist.dto';
 import { UpdateWishlistDto } from './dto/update-wishlist.dto';
+import {
+  verifyOwner,
+  protectPrivacyUser,
+  protectPrivacyWishlists,
+} from '../utils/guard-utils';
+import { updateProperties } from '../utils/update-properties';
+import { validateAndGetWishes } from '../utils/wish-validation';
 
 @Injectable()
 export class WishlistsService {
@@ -21,84 +29,97 @@ export class WishlistsService {
     private userRepository: Repository<User>,
   ) {}
 
-  async create(
-    createWishlistDto: CreateWishlistDto,
-    ownerId: number,
-  ): Promise<Wishlist> {
-    const { itemsId, ...rest } = createWishlistDto;
-    const owner = await this.userRepository.findOne({ where: { id: ownerId } });
+  async findAll() {
+    const wishlists = await this.wishlistRepository.find({
+      relations: ['owner', 'items'],
+    });
+    protectPrivacyWishlists(wishlists);
+    return wishlists;
+  }
+
+  async create(createWishlistDto: CreateWishlistDto, currentUserId: number) {
+    const wishlist = createWishlistDto;
+    const owner = await this.userRepository.findOne({
+      where: { id: currentUserId },
+    });
     if (!owner) {
       throw new NotFoundException(
-        `Пользователь с идентификатором ${ownerId} не найден.`,
+        `Пользователь с ID ${currentUserId} не найден!`,
       );
     }
-    const items = itemsId
-      ? await this.wishRepository.findBy({ id: In(itemsId) })
-      : [];
-    const wishlist = this.wishlistRepository.create({
-      ...rest,
+    let items = [];
+    if (wishlist.itemsId) {
+      items = await validateAndGetWishes(
+        this.wishRepository,
+        createWishlistDto,
+        currentUserId,
+      );
+    }
+    protectPrivacyUser(owner);
+    const newWishlist = this.wishlistRepository.create({
+      ...wishlist,
       owner,
       items,
     });
-    await this.wishlistRepository.save(wishlist);
-    return wishlist;
+    await this.wishlistRepository.save(newWishlist);
+    return newWishlist;
   }
 
-  async findAll(): Promise<Wishlist[]> {
-    const wishlist = await this.wishlistRepository.find({
-      relations: ['owner', 'items'],
-    });
-    return wishlist;
-  }
-
-  async findOne(id: number): Promise<Wishlist> {
+  async findOne(wishlistId: number) {
     const wishlist = await this.wishlistRepository.findOne({
-      where: { id: id },
+      where: { id: wishlistId },
       relations: ['owner', 'items'],
     });
     if (!wishlist) {
-      throw new NotFoundException(`Список желаний с ID:${id} не найден.`);
+      throw new NotFoundException(`Список желаний с ID ${wishlistId} не найден!`);
     }
+    protectPrivacyUser(wishlist.owner);
     return wishlist;
   }
 
   async updateOne(
-    id: number,
+    wishlistId: number,
+    currentUserId: number,
     updateWishlistDto: UpdateWishlistDto,
-  ): Promise<Wishlist> {
-    const wishlist = await this.wishlistRepository.findOne({ where: { id } });
+  ) {
+    const wishlist = await this.wishlistRepository.findOne({
+      where: { id: wishlistId },
+      relations: ['owner', 'items'],
+    });
     if (!wishlist) {
-      throw new NotFoundException(`Список желаний ID:${id} не найден.`);
-    }
+      throw new NotFoundException(`Список желаний ID ${wishlistId} не найден!`);
+    }    
+    verifyOwner(wishlist.owner.id, currentUserId, wishlistId);
     if (updateWishlistDto.itemsId) {
-      const items = await this.wishRepository.findBy({
-        id: In(updateWishlistDto.itemsId),
-      });
-      if (items.length !== updateWishlistDto.itemsId.length) {
-        throw new NotFoundException(
-          `Не все желания с ID:[${updateWishlistDto.itemsId.join(
-            ', ',
-          )}] найдены.`,
-        );
-      }
-      wishlist.items = items;
+      wishlist.items = await validateAndGetWishes(
+        this.wishRepository,
+        updateWishlistDto,
+        currentUserId,
+      );
     }
-    if (updateWishlistDto.name) {
-      wishlist.name = updateWishlistDto.name;
-    }
-    if (updateWishlistDto.image) {
-      wishlist.image = updateWishlistDto.image;
-    }
+    updateProperties(wishlist, updateWishlistDto, [
+      'name',
+      'description',
+      'image',
+    ]);
+    protectPrivacyUser(wishlist.owner);
     await this.wishlistRepository.save(wishlist);
     return wishlist;
   }
 
-  async removeOne(id: number): Promise<Wishlist> {
-    const wishlist = await this.wishlistRepository.findOne({ where: { id } });
+  async removeOne(wishlistId: number, currentUserId: number) {
+    const wishlist = await this.wishlistRepository.findOne({
+      where: { id: wishlistId },
+      relations: ['owner', 'items'],
+    });
     if (!wishlist) {
-      throw new NotFoundException(`Список желаний с ID:${id} не найден.`);
+      throw new NotFoundException(
+        `Список желаний с ID ${wishlistId} не найден!`,
+      );
     }
-    await this.wishlistRepository.remove(wishlist);
+    verifyOwner(wishlist.owner.id, currentUserId, wishlistId);
+    await this.wishlistRepository.delete({ id: wishlistId });
+    protectPrivacyUser(wishlist.owner);
     return wishlist;
   }
 }

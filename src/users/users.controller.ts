@@ -6,7 +6,6 @@ import {
   Patch,
   Param,
   Req,
-  HttpStatus,
   UseGuards,
 } from '@nestjs/common';
 import { AuthenticatedRequest } from 'src/types/request';
@@ -21,35 +20,35 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('me')
-  async getProfileData(@Req() req: AuthenticatedRequest) {
-    return this.usersService.findOne(+req.user.id);
+  async getMyProfile(@Req() req: AuthenticatedRequest) {
+    return this.usersService.findUser(+req.user.id);
   }
 
   @Patch('me')
-  async updateProfile(
+  async updateMyProfile(
     @Req() req: AuthenticatedRequest,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    return this.usersService.updateOne(+req.user.id, updateUserDto);
+    return this.usersService.updateUser(+req.user.id, updateUserDto);
   }
 
   @Get('me/wishes')
-  async getProfileWishes(@Req() req: AuthenticatedRequest) {
+  async getMyWishes(@Req() req: AuthenticatedRequest) {
     return this.usersService.getWishes(+req.user.id);
   }
 
   @Get(':username')
-  async findUserByName(@Param('username') username: string) {
-    return this.usersService.findByName(username);
+  async getUserByName(@Param('username') username: string) {
+    return this.usersService.findUserByName(username);
   }
 
   @Get(':username/wishes')
-  async getUserWishes(@Param('username') username: string) {
-    return this.usersService.getUserWishes(username);
+  async getWishesByName(@Param('username') username: string) {
+    return this.usersService.findWishesByName(username);
   }
 
   @Post('find')
-  findUserByQuery(@Body() queryUserDto: QueryUserDto) {
-    return this.usersService.findByQuery(queryUserDto);
+  getUsersByQuery(@Body() queryUserDto: QueryUserDto) {
+    return this.usersService.findUsersByQuery(queryUserDto);
   }
 }

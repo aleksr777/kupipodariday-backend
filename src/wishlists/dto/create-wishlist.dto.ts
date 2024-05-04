@@ -9,7 +9,7 @@ export class CreateWishlistDto {
   image: string;
 
   @ApiProperty()
-  description?: string;
+  description: string;
 
   @IsArray()
   @IsInt({ each: true })

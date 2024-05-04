@@ -62,15 +62,15 @@ export class User {
   @IsString()
   password: string;
 
-  @OneToMany(() => Wish, (wish) => wish.owner)
+  @OneToMany(() => Wish, (wish) => wish.owner, { cascade: ['remove'] })
   @IsArray()
-  items: Wish[];
+  wishes: Wish[];
 
-  @OneToMany(() => Offer, (offer) => offer.user)
+  @OneToMany(() => Offer, (offer) => offer.owner, { cascade: ['remove'] })
   @IsArray()
   offers: Offer[];
 
-  @OneToMany(() => Wishlist, (wishlist) => wishlist.owner)
+  @OneToMany(() => Wishlist, (wishlist) => wishlist.owner, { cascade: ['remove'] })
   @IsArray()
   wishlists: Wishlist[];
 }

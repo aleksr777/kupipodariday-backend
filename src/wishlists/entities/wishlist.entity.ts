@@ -5,7 +5,6 @@ import {
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
-  JoinColumn,
   OneToMany,
 } from 'typeorm';
 import { IsString, MaxLength, Length, IsUrl } from 'class-validator';
@@ -39,14 +38,13 @@ export class Wishlist {
 
   @Column({ default: '' })
   @MaxLength(1500)
-  description: string = '';
+  description: string;
 
   @Column()
   @IsUrl()
   image: string;
 
-  @ManyToOne(() => User, (user) => user.wishlists)
-  @JoinColumn({ name: 'ownerId' })
+  @ManyToOne(() => User, (owner) => owner.wishlists)
   owner: User;
 
   @OneToMany(() => Wish, (wish) => wish.wishlist)

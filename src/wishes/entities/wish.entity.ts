@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   OneToMany,
   ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import {
   IsNotEmpty,
@@ -74,13 +75,15 @@ export class Wish {
   @IsNumber()
   copied: number = 0;
 
-  @ManyToOne(() => User, (owner) => owner.items)
+  @ManyToOne(() => User, (owner) => owner.wishes)
   owner: User;
 
-  @OneToMany(() => Offer, (offer) => offer.wish)
+  @OneToMany(() => Offer, (offer) => offer.item, { cascade: ['remove'] })
   @IsArray()
   offers: Offer[];
 
-  @ManyToOne(() => Wishlist, (wishlist) => wishlist.items)
+  @ManyToOne(() => Wishlist, (wishlist) => wishlist.items, {
+    onDelete: 'SET NULL',
+  })
   wishlist: Wishlist;
 }

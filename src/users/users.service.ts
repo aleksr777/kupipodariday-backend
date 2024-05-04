@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { protectPrivacyUser } from '../utils/guard-utils';
 import { User } from './entities/user.entity';
 import { Wish } from '../wishes/entities/wish.entity';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -24,29 +25,82 @@ export class UsersService {
     private hashService: HashService,
   ) {}
 
-  async findAll(): Promise<User[]> {
-    return await this.userRepository.find();
-  }
-
-  async findOne(userId: number): Promise<User> {
+  async findUser(userId: number): Promise<User> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException(`Пользователь c ID:${userId} не найден`);
     }
+    protectPrivacyUser(user);
     return user;
   }
 
-  async findByName(username: string): Promise<User> {
+  async updateUser(
+    currentUserId: number,
+    updateUserDto: UpdateUserDto,
+  ): Promise<User> {
+    try {
+      if (updateUserDto.password) {
+        updateUserDto.password = await this.hashService.getHash(
+          updateUserDto.password,
+        );
+      }
+      const updatedUser = await this.userRepository.save({
+        id: currentUserId,
+        ...updateUserDto,
+      });
+      if (!updatedUser) {
+        throw new NotFoundException(
+          `Пользователь с ID ${currentUserId} не найден в базе данных!`,
+        );
+      }
+      delete updatedUser.password;
+      return updatedUser;
+    } catch (err) {
+      switch (err?.code) {
+        case '23505':
+          throw new ConflictException(
+            'Пользователь с такими уникальными данными уже существует.',
+          );
+        case 'EntityNotFound':
+          throw new NotFoundException(
+            `Пользователь с ID ${currentUserId} не найден!`,
+          );
+        default:
+          throw new InternalServerErrorException(
+            'Не удалось обновить данные пользователя в базе данных!',
+          );
+      }
+    }
+  }
+
+  async getWishes(userId: number, username?: string) {
+    const items = await this.wishRepository.find({
+      where: { owner: { id: userId } },
+      relations: ['offers'],
+    });
+    if (!items) {
+      const errorDetails = username
+        ? `У пользователя ${username} желания не найдены в базе данных!`
+        : `У текущего пользователя желания не найдены в базе данных!`;
+      throw new NotFoundException(errorDetails);
+    }
+    return items;
+  }
+
+  async findUserByName(username: string): Promise<User> {
     const user = await this.userRepository.findOne({ where: { username } });
     if (!user) {
-      throw new NotFoundException(`Такого пользователя нет в базе данных.`);
+      throw new NotFoundException(
+        `Пользователь ${username} не найден в базе данных!`,
+      );
     }
+    protectPrivacyUser(user);
     return user;
   }
 
-  async findByQuery(queryUserDto: QueryUserDto): Promise<User[]> {
+  async findUsersByQuery(queryUserDto: QueryUserDto): Promise<User[]> {
     const query = queryUserDto.query;
-    const users = this.userRepository.find({
+    const users = await this.userRepository.find({
       where: [
         { email: query },
         { username: Like(`%${query}%`) },
@@ -54,68 +108,47 @@ export class UsersService {
       ],
     });
     if (!users) {
-      throw new NotFoundException(`Пользователи не найдены`);
+      throw new NotFoundException(`Пользователи не найдены!`);
     }
+    users.forEach((user) => {
+      if (user) {
+        delete user.password;
+      }
+    });
     return users;
   }
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
-    const userData = createUserDto;
-    const hashedPassword = await this.hashService.getHash(userData.password);
-    userData.password = hashedPassword;
-    const userDto = this.userRepository.create(userData);
-    return this.userRepository
-      .save(userDto)
-      .then((res) => {
-        delete userData.email;
-        delete userData.password;
-        return res;
-      })
-      .catch((err) => {
-        if (err?.code === '23505') {
-          throw new ConflictException(
-            'Пользователь с такими уникальными данными уже существует.',
-          );
-        }
-        throw new InternalServerErrorException(
-          'Не удалось сохранить нового пользователя в базе данных.',
-        );
+  async create(createUserDto: CreateUserDto) {
+    try {
+      const hashedPassword = await this.hashService.getHash(
+        createUserDto.password,
+      );
+      const newUser = this.userRepository.create({
+        ...createUserDto,
+        password: hashedPassword,
       });
-  }
-
-  async updateOne(userId: number, updateUserDto: UpdateUserDto): Promise<User> {
-    const result = await this.userRepository.update(
-      { id: userId },
-      updateUserDto,
-    );
-    if (result.affected === 0) {
-      throw new NotFoundException(`Пользователь с ID:${userId} не найден`);
-    } else {
-      return await this.userRepository.findOne({ where: { id: userId } });
+      const savedUser = await this.userRepository.save(newUser);
+      protectPrivacyUser(savedUser);
+      return savedUser;
+    } catch (err) {
+      if (err?.code === '23505') {
+        throw new ConflictException(
+          'Пользователь с такими уникальными данными уже существует!',
+        );
+      } else {
+        throw new InternalServerErrorException(
+          'Не удалось сохранить нового пользователя в базе данных!',
+        );
+      }
     }
   }
 
-  async getWishes(userId: number) {
-    const wishes = await this.wishRepository.find({
-      where: { owner: { id: userId } },
-      relations: ['owner'],
-    });
-    return wishes;
-  }
-
-  async getUserWishes(username: string) {
-    const user = await this.userRepository.findOne({ where: { username } });
-    if (!user) {
+  async findWishesByName(username: string) {
+    const owner = await this.userRepository.findOne({ where: { username } });
+    if (!owner) {
       throw new NotFoundException(`Пользователь ${username} не найден`);
     }
-    const wishes = await this.getWishes(user.id);
-    return wishes;
-  }
-
-  async removeOne(id: number): Promise<void> {
-    const result = await this.userRepository.delete({ id });
-    if (result.affected === 0) {
-      throw new NotFoundException(`Пользователь с ID:${id} не найден`);
-    }
+    const items = await this.getWishes(owner.id, username);
+    return items;
   }
 }

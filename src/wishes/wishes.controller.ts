@@ -39,12 +39,12 @@ export class WishesController {
   }
 
   @Get(':id')
-  async findOneWish(@Param('id') id: number) {
+  async getWish(@Param('id') id: number) {
     return this.wishesService.findOne(+id);
   }
 
   @Patch(':id')
-  async updateOneWish(
+  async updateWish(
     @Body() updateWishDto: UpdateWishDto,
     @Req() req: AuthenticatedRequest,
     @Param('id') id: number,
@@ -53,7 +53,7 @@ export class WishesController {
   }
 
   @Delete(':id')
-  async removeOneWish(
+  async deleteWish(
     @Param('id') id: number,
     @Req() req: AuthenticatedRequest,
   ) {
