@@ -78,7 +78,7 @@ export class Wish {
   @ManyToOne(() => User, (owner) => owner.wishes)
   owner: User;
 
-  @OneToMany(() => Offer, (offer) => offer.item, { cascade: ['remove'] })
+  @OneToMany(() => Offer, (offer) => offer.item)
   @IsArray()
   offers: Offer[];
 

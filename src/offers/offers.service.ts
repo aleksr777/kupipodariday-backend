@@ -1,14 +1,11 @@
-import {
-  Injectable,
-  NotFoundException,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Offer } from './entities/offer.entity';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { Wish } from '../wishes/entities/wish.entity';
 import { User } from '../users/entities/user.entity';
+import { modifyOffer, modifyOffersArr } from '../utils/wishes-utils';
 
 @Injectable()
 export class OffersService {
@@ -25,9 +22,7 @@ export class OffersService {
       where: { id: itemId },
     });
     if (!item) {
-      throw new NotFoundException(
-        `Предложение скинуться с ID ${itemId} не найдено!`,
-      );
+      throw new NotFoundException(`Предложение с ID ${itemId} не найдено!`);
     }
     const offer = this.offerRepository.create({
       ...createOfferDto,
@@ -35,12 +30,22 @@ export class OffersService {
       item: item,
     });
     await this.offerRepository.save(offer);
+    return {};
   }
 
   async findAll() {
-    return await this.offerRepository.find({
-      relations: ['item', 'owner'],
+    const offers = await this.offerRepository.find({
+      relations: [
+        'item',
+        'owner',
+        'owner.wishes',
+        'owner.offers',
+        'owner.wishlists',
+        'owner.wishlists.owner',
+        'owner.wishlists.items',
+      ],
     });
+    return await modifyOffersArr(offers);
   }
 
   async findOne(offerId: number) {
@@ -57,30 +62,8 @@ export class OffersService {
       ],
     });
     if (!offer) {
-      throw new NotFoundException(
-        `Предложение скинуться с ID ${offerId} не найдено!`,
-      );
+      throw new NotFoundException(`Предложение с ID ${offerId} не найдено!`);
     }
-    const resObj = {
-      id: offer.id,
-      createdAt: offer.createdAt,
-      updatedAt: offer.updatedAt,
-      item: offer.item,
-      amount: offer.amount,
-      hidden: offer.hidden,
-      user: {
-        id: 5,
-        username: offer.owner.username,
-        about: offer.owner.about,
-        avatar: offer.owner.avatar,
-        email: offer.owner.email,
-        createdAt: offer.owner.createdAt,
-        updatedAt: offer.owner.updatedAt,
-        wishes: offer.owner.wishes,
-        offers: offer.owner.offers,
-        wishlists: offer.owner.wishlists,
-      },
-    };
-    return resObj;
+    return await modifyOffer(offer);
   }
 }

@@ -1,8 +1,10 @@
 import { NotFoundException } from '@nestjs/common';
 import { Repository, In } from 'typeorm';
 import { Wish } from '../wishes/entities/wish.entity';
+import { Offer } from '../offers/entities/offer.entity';
 import { CreateWishlistDto } from '../wishlists/dto/create-wishlist.dto';
 import { UpdateWishlistDto } from '../wishlists/dto/update-wishlist.dto';
+import { protectPrivacyUser, protectPrivacyInArray } from './guard-utils';
 
 async function getInvalidWishes(
   itemsId: number[],
@@ -48,4 +50,68 @@ export async function validateAndGetWishes(
     }
   }
   return foundItems;
+}
+
+// Нужен ля формирования ответа сервера по заданию
+// https://app.swaggerhub.com/apis/zlocate/KupiPodariDay/1.0.0#/offers/OffersController_findOne
+export async function modifyOffer(offer: Offer) {
+  if (!offer || !offer.owner) {
+    return;
+  }
+
+  offer.owner.wishlists?.forEach((wishlist) => {
+    if (wishlist && wishlist.owner) {
+      protectPrivacyUser(wishlist.owner);
+    }
+  });
+
+  const userWishes =
+    offer.owner.wishes
+      ?.filter((wish) => wish?.name !== undefined)
+      .map((wish) => wish.name) || [];
+
+  const userOffers =
+    offer.owner.offers
+      ?.filter((offer) => offer.item?.name !== undefined)
+      .map((offer) => offer.item.name) || [];
+
+  const modifiedOffer = {
+    ...offer,
+    item: offer.item?.name,
+    user: {
+      ...offer.owner,
+      wishes: userWishes,
+      offers: userOffers,
+    },
+  };
+  delete modifiedOffer.owner;
+  return modifiedOffer;
+}
+
+export async function modifyOffersArr(offers: Offer[]) {
+  if (!offers.length) {
+    return [];
+  }
+  protectPrivacyInArray(offers, false);
+  return Promise.all(
+    offers.map(async (offer) => {
+      return await modifyOffer(offer);
+    }),
+  );
+}
+
+export async function modifyItemsArr(items: Wish[]) {
+  if (!items.length) {
+    return [];
+  }
+
+  protectPrivacyInArray(items);
+
+  return items.map((item) => {
+    const modifiedOffers = modifyOffersArr(item.offers);
+    return {
+      ...item,
+      offers: modifiedOffers,
+    };
+  });
 }

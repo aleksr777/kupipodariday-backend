@@ -1,7 +1,6 @@
 import {
   Injectable,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -13,10 +12,10 @@ import { UpdateWishlistDto } from './dto/update-wishlist.dto';
 import {
   verifyOwner,
   protectPrivacyUser,
-  protectPrivacyWishlists,
+  protectPrivacyInArray,
 } from '../utils/guard-utils';
 import { updateProperties } from '../utils/update-properties';
-import { validateAndGetWishes } from '../utils/wish-validation';
+import { validateAndGetWishes } from '../utils/wishes-utils';
 
 @Injectable()
 export class WishlistsService {
@@ -33,7 +32,7 @@ export class WishlistsService {
     const wishlists = await this.wishlistRepository.find({
       relations: ['owner', 'items'],
     });
-    protectPrivacyWishlists(wishlists);
+    protectPrivacyInArray(wishlists);
     return wishlists;
   }
 
@@ -71,7 +70,9 @@ export class WishlistsService {
       relations: ['owner', 'items'],
     });
     if (!wishlist) {
-      throw new NotFoundException(`Список желаний с ID ${wishlistId} не найден!`);
+      throw new NotFoundException(
+        `Список желаний с ID ${wishlistId} не найден!`,
+      );
     }
     protectPrivacyUser(wishlist.owner);
     return wishlist;
@@ -88,7 +89,7 @@ export class WishlistsService {
     });
     if (!wishlist) {
       throw new NotFoundException(`Список желаний ID ${wishlistId} не найден!`);
-    }    
+    }
     verifyOwner(wishlist.owner.id, currentUserId, wishlistId);
     if (updateWishlistDto.itemsId) {
       wishlist.items = await validateAndGetWishes(
