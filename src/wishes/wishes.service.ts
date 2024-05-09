@@ -5,11 +5,8 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import {
-  verifyOwner,
-  protectPrivacyUser,
-} from '../utils/guard-utils';
+import { DataSource, Repository } from 'typeorm';
+import { verifyOwner, protectPrivacyUser } from '../utils/guard-utils';
 import { modifyOffersArr, modifyItemsArr } from '../utils/wishes-utils';
 import { Wish } from './entities/wish.entity';
 import { User } from '../users/entities/user.entity';
@@ -20,6 +17,7 @@ import { UpdateWishDto } from './dto/update-wish.dto';
 @Injectable()
 export class WishesService {
   constructor(
+    private readonly dataSource: DataSource,
     @InjectRepository(Wish)
     private readonly wishRepository: Repository<Wish>,
     @InjectRepository(Offer)
@@ -128,7 +126,7 @@ export class WishesService {
     verifyOwner(item.owner.id, currentUserId, itemId);
     if (item.raised !== 0 && item.offers.length > 0) {
       throw new ForbiddenException(
-        `Подарок с ID ${itemId} нельзя редактировать, на него уже скидываются!`,
+        `Подарок с ID ${itemId} нельзя редактировать, так как уже есть минимум одно предложение скинуться а него!`,
       );
     }
     protectPrivacyUser(item.owner);
@@ -137,6 +135,8 @@ export class WishesService {
   }
 
   async removeOne(itemId: number, currentUserId: number) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
     const item = await this.wishRepository.findOne({
       where: { id: itemId },
       relations: [
@@ -152,24 +152,20 @@ export class WishesService {
         'offers.owner.wishlists.items',
       ],
     });
-
     if (!item) {
-      throw new NotFoundException('Подарок не найден в базе данных!');
+      throw new NotFoundException(
+        `Подарок с ID: ${itemId} не найден в базе данных!`,
+      );
     }
-
     verifyOwner(item.owner.id, currentUserId, itemId);
-
-    if (item.offers.length > 0) {
-      try {
-        await this.offerRepository.remove(item.offers);
-      } catch (error) {
-        throw new InternalServerErrorException(
-          `Не удалось удалить из базы данных связанные данные с желанием с ID: ${itemId}!`,
-        );
-      }
+    if (item.raised > 0) {
+      throw new ForbiddenException(
+        `Подарок с ID: ${itemId} удалять нельзя, так как уже есть минимум одно предложение скинуться а него!`,
+      );
     }
-
+    await queryRunner.startTransaction();
     try {
+      await this.offerRepository.remove(item.offers);
       await this.wishRepository.delete({ id: itemId });
       protectPrivacyUser(item.owner);
       const modifiedOffers = await modifyOffersArr(item.offers);
@@ -177,45 +173,57 @@ export class WishesService {
         ...item,
         offers: modifiedOffers,
       };
+      await queryRunner.commitTransaction();
       return modifiedItem;
-    } catch (error) {
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
       throw new InternalServerErrorException(
-        `Не удалось удалить желание с ID: ${itemId} из базы данных!`,
+        `Не удалось удалить желание с ID: ${itemId}, ошибка в базе данных!`,
       );
+    } finally {
+      await queryRunner.release();
     }
   }
 
   async copyOne(itemId: number, user: User) {
-    const originalWish = await this.wishRepository.findOne({
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    const originalItem = await this.wishRepository.findOne({
       where: { id: itemId },
       relations: ['owner'],
     });
-    if (!originalWish) {
-      throw new NotFoundException('Запрашиваемый подарок не найден!');
+    if (!originalItem) {
+      throw new NotFoundException(
+        `Желание с ID: ${itemId} не найдено в базе данных!`,
+      );
     }
-    if (user.id === originalWish.owner.id) {
+    if (user.id === originalItem.owner.id) {
       throw new ForbiddenException(
-        'Нельзя копировать свой собственный подарок!',
+        `Желание с ID: ${itemId} принадлежит текущему пользователю, нельзя копировать своё собственное желание!`,
       );
     }
-    await this.wishRepository.update(itemId, {
-      copied: originalWish.copied + 1,
-    });
     const newItem = {
-      ...originalWish,
-      id: undefined,
-      raised: 0,
-      copied: 0,
+      ...originalItem,
       owner: user,
-      offers: [],
+      copied: 0,
+      raised: 0,
     };
+    delete newItem.id;
+    await queryRunner.startTransaction();
     try {
-      await this.wishRepository.save(newItem);
+      await this.wishRepository.update(itemId, {
+        copied: originalItem.copied + 1,
+      });
+      await queryRunner.manager.save(Wish, newItem);
+      await queryRunner.commitTransaction();
       return {};
-    } catch (error) {
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
       throw new InternalServerErrorException(
-        'Не удалось сохранить скопированное желание в базе данных!',
+        `Не удалось копировать желание с ID: ${itemId}, ошибка в базе данных!`,
       );
+    } finally {
+      await queryRunner.release();
     }
   }
 }
