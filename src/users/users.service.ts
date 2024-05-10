@@ -28,7 +28,7 @@ export class UsersService {
   async findUser(userId: number): Promise<User> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
-      throw new NotFoundException(`Пользователь c ID:${userId} не найден`);
+      throw new NotFoundException(`Пользователь не найден в базе данных!`);
     }
     protectPrivacyUser(user);
     return user;
@@ -50,7 +50,7 @@ export class UsersService {
       });
       if (!updatedUser) {
         throw new NotFoundException(
-          `Пользователь с ID ${currentUserId} не найден в базе данных!`,
+          `Пользователь не найден в базе данных!`,
         );
       }
       delete updatedUser.password;
@@ -59,15 +59,15 @@ export class UsersService {
       switch (err?.code) {
         case '23505':
           throw new ConflictException(
-            'Пользователь с такими уникальными данными уже существует.',
+            'Пользователь с такими уникальными данными уже существует в базе данных!',
           );
         case 'EntityNotFound':
           throw new NotFoundException(
-            `Пользователь с ID ${currentUserId} не найден!`,
+            `Пользователь не найден в базе данных!`,
           );
         default:
           throw new InternalServerErrorException(
-            'Не удалось обновить данные пользователя в базе данных!',
+            `Не удалось обновить данные пользователя в базе данных!`,
           );
       }
     }
@@ -80,8 +80,8 @@ export class UsersService {
     });
     if (!items) {
       const errorDetails = username
-        ? `У пользователя ${username} желания не найдены в базе данных!`
-        : `У текущего пользователя желания не найдены в базе данных!`;
+        ? `У пользователя ${username} не найдены желания в базе данных!`
+        : `У текущего пользователя не найдены  желания в базе данных!`;
       throw new NotFoundException(errorDetails);
     }
     return items;
@@ -108,7 +108,7 @@ export class UsersService {
       ],
     });
     if (!users) {
-      throw new NotFoundException(`Пользователи не найдены!`);
+      throw new NotFoundException(`Пользователи не найдены в базе данных!`);
     }
     users.forEach((user) => {
       if (user) {
@@ -146,7 +146,7 @@ export class UsersService {
   async findWishesByName(username: string) {
     const owner = await this.userRepository.findOne({ where: { username } });
     if (!owner) {
-      throw new NotFoundException(`Пользователь ${username} не найден`);
+      throw new NotFoundException(`Пользователь ${username} не найден в базе данных!`);
     }
     const items = await this.getWishes(owner.id, username);
     return items;

@@ -36,12 +36,12 @@ export async function validateAndGetWishes(
     if (invalidWishes.length > 0) {
       const errorDetails =
         invalidWishes.length === 1
-          ? `Желание с ID ${invalidWishes.join(', ')} ${
+          ? `Желание ${
               userId
                 ? 'не найдено в базе данных или не принадлежит текущему пользователю'
                 : 'не найдено в базе данных'
             }.`
-          : `Желания с ID: [${invalidWishes.join(', ')}] ${
+          : `Желания ${
               userId
                 ? 'не найдены в базе данных или не принадлежат текущему пользователю'
                 : 'не найдены в базе данных'
@@ -52,7 +52,7 @@ export async function validateAndGetWishes(
   return foundItems;
 }
 
-// Нужен ля формирования ответа сервера по заданию
+// Нужен для формирования ответа сервера в нужном формате по заданию
 // https://app.swaggerhub.com/apis/zlocate/KupiPodariDay/1.0.0#/offers/OffersController_findOne
 export async function modifyOffer(offer: Offer) {
   if (!offer || !offer.owner) {

@@ -43,7 +43,7 @@ export class WishlistsService {
     });
     if (!owner) {
       throw new NotFoundException(
-        `Пользователь с ID ${currentUserId} не найден!`,
+        `Пользователь не найден в базе данных!`,
       );
     }
     let items = [];
@@ -71,7 +71,7 @@ export class WishlistsService {
     });
     if (!wishlist) {
       throw new NotFoundException(
-        `Список желаний с ID ${wishlistId} не найден!`,
+        `Список желаний не найден в базе данных!`,
       );
     }
     protectPrivacyUser(wishlist.owner);
@@ -88,7 +88,7 @@ export class WishlistsService {
       relations: ['owner', 'items'],
     });
     if (!wishlist) {
-      throw new NotFoundException(`Список желаний ID ${wishlistId} не найден!`);
+      throw new NotFoundException(`Список желаний не найден в базе данных!`);
     }
     verifyOwner(wishlist.owner.id, currentUserId, wishlistId);
     if (updateWishlistDto.itemsId) {
@@ -115,7 +115,7 @@ export class WishlistsService {
     });
     if (!wishlist) {
       throw new NotFoundException(
-        `Список желаний с ID ${wishlistId} не найден!`,
+        `Список желаний не найден в базе данных!`,
       );
     }
     verifyOwner(wishlist.owner.id, currentUserId, wishlistId);

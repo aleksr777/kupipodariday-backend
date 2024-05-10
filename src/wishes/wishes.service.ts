@@ -154,13 +154,13 @@ export class WishesService {
     });
     if (!item) {
       throw new NotFoundException(
-        `Подарок с ID: ${itemId} не найден в базе данных!`,
+        `Желание не найдено в базе данных!`,
       );
     }
     verifyOwner(item.owner.id, currentUserId, itemId);
     if (item.raised > 0) {
       throw new ForbiddenException(
-        `Подарок с ID: ${itemId} удалять нельзя, так как уже есть минимум одно предложение скинуться а него!`,
+        `Это желание удалять нельзя, так как уже есть минимум одно предложение скинуться а него!`,
       );
     }
     await queryRunner.startTransaction();
@@ -178,7 +178,7 @@ export class WishesService {
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw new InternalServerErrorException(
-        `Не удалось удалить желание с ID: ${itemId}, ошибка в базе данных!`,
+        `Ошибка сервера! Не удалось удалить желание!`,
       );
     } finally {
       await queryRunner.release();
@@ -194,12 +194,12 @@ export class WishesService {
     });
     if (!originalItem) {
       throw new NotFoundException(
-        `Желание с ID: ${itemId} не найдено в базе данных!`,
+        `Желание не найдено в базе данных!`,
       );
     }
     if (user.id === originalItem.owner.id) {
       throw new ForbiddenException(
-        `Желание с ID: ${itemId} принадлежит текущему пользователю, нельзя копировать своё собственное желание!`,
+        `Нельзя копировать своё собственное желание!`,
       );
     }
     const newItem = {
@@ -220,7 +220,7 @@ export class WishesService {
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw new InternalServerErrorException(
-        `Не удалось копировать желание с ID: ${itemId}, ошибка в базе данных!`,
+        `Ошибка сервера! Не удалось копировать это желание!`,
       );
     } finally {
       await queryRunner.release();

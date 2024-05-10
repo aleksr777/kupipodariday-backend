@@ -13,7 +13,7 @@ export function verifyOwner(
   if (ownerId !== currentUserId) {
     throw new UnauthorizedException(
       errorMessage ||
-        `Текущий пользователь не имеет прав доступа к ресурсу с ID ${resourceId}!`,
+        `Текущий пользователь не имеет прав доступа к запрашиваемому ресурсу!`,
     );
   }
 }
