@@ -90,7 +90,7 @@ export class WishlistsService {
     if (!wishlist) {
       throw new NotFoundException(`Список желаний не найден в базе данных!`);
     }
-    verifyOwner(wishlist.owner.id, currentUserId, wishlistId);
+    verifyOwner(wishlist.owner.id, currentUserId, `Нельзя редактировать чужой список желаний!`);
     if (updateWishlistDto.itemsId) {
       wishlist.items = await validateAndGetWishes(
         this.wishRepository,
@@ -118,7 +118,7 @@ export class WishlistsService {
         `Список желаний не найден в базе данных!`,
       );
     }
-    verifyOwner(wishlist.owner.id, currentUserId, wishlistId);
+    verifyOwner(wishlist.owner.id, currentUserId, `Нельзя удалить чужой список желаний!`);
     await this.wishlistRepository.delete({ id: wishlistId });
     protectPrivacyUser(wishlist.owner);
     return wishlist;

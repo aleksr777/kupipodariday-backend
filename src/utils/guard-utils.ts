@@ -7,7 +7,6 @@ import { Offer } from 'src/offers/entities/offer.entity';
 export function verifyOwner(
   ownerId: number,
   currentUserId: number,
-  resourceId: number,
   errorMessage?: string,
 ): void {
   if (ownerId !== currentUserId) {

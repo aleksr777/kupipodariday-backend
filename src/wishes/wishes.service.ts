@@ -119,14 +119,16 @@ export class WishesService {
   ) {
     const item = await this.findOne(itemId);
     if (!item) {
-      throw new NotFoundException(
-        `Подарок с ID ${itemId} не найден в базе данных!`,
-      );
+      throw new NotFoundException(`Желание не найдено в базе данных!`);
     }
-    verifyOwner(item.owner.id, currentUserId, itemId);
+    verifyOwner(
+      item.owner.id,
+      currentUserId,
+      `Нельзя редактировать чужое желание!`,
+    );
     if (item.raised !== 0 && item.offers.length > 0) {
       throw new ForbiddenException(
-        `Подарок с ID ${itemId} нельзя редактировать, так как уже есть минимум одно предложение скинуться а него!`,
+        `Желание нельзя редактировать, так как уже есть минимум одно предложение скинуться а него!`,
       );
     }
     protectPrivacyUser(item.owner);
@@ -153,11 +155,9 @@ export class WishesService {
       ],
     });
     if (!item) {
-      throw new NotFoundException(
-        `Желание не найдено в базе данных!`,
-      );
+      throw new NotFoundException(`Желание не найдено в базе данных!`);
     }
-    verifyOwner(item.owner.id, currentUserId, itemId);
+    verifyOwner(item.owner.id, currentUserId, `Нельзя удалить чужое желание!`);
     if (item.raised > 0) {
       throw new ForbiddenException(
         `Это желание удалять нельзя, так как уже есть минимум одно предложение скинуться а него!`,
@@ -193,9 +193,7 @@ export class WishesService {
       relations: ['owner'],
     });
     if (!originalItem) {
-      throw new NotFoundException(
-        `Желание не найдено в базе данных!`,
-      );
+      throw new NotFoundException(`Желание не найдено в базе данных!`);
     }
     if (user.id === originalItem.owner.id) {
       throw new ForbiddenException(
