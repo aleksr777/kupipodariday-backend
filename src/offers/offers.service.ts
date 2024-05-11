@@ -31,9 +31,7 @@ export class OffersService {
       relations: ['owner'],
     });
     if (!item) {
-      throw new NotFoundException(
-        `Предложение не найдено в базе данных!`,
-      );
+      throw new NotFoundException(`Предложение не найдено в базе данных!`);
     }
     if (!item.owner) {
       throw new InternalServerErrorException(
@@ -41,9 +39,7 @@ export class OffersService {
       );
     }
     if (item.owner.id === user.id) {
-      throw new BadRequestException(
-        `Нельзя скинуться на собственное желание!`,
-      );
+      throw new BadRequestException(`Нельзя скинуться на собственное желание!`);
     }
     const sumOffer = Number(item.raised) + Number(createOfferDto.amount);
     if (sumOffer > item.price) {
@@ -82,12 +78,20 @@ export class OffersService {
         'owner',
         'owner.wishes',
         'owner.offers',
+        'owner.offers.item',
+        'owner.offers.owner',
         'owner.wishlists',
         'owner.wishlists.owner',
         'owner.wishlists.items',
       ],
     });
-    return await modifyOffersArr(offers);
+    if (!offers.length) {
+      throw new NotFoundException(
+        `Предложений скинуться на желание в базе данных не найдено!`,
+      );
+    }
+    const modifiedOffers = await modifyOffersArr(offers);
+    return modifiedOffers;
   }
 
   async findOne(offerId: number) {
@@ -98,6 +102,8 @@ export class OffersService {
         'owner',
         'owner.wishes',
         'owner.offers',
+        'owner.offers.item',
+        'owner.offers.owner',
         'owner.wishlists',
         'owner.wishlists.owner',
         'owner.wishlists.items',
@@ -105,9 +111,10 @@ export class OffersService {
     });
     if (!offer) {
       throw new NotFoundException(
-        `Предложение скинуться не найдено в базе данных!`,
+        `Предложение скинуться на желание не найдено в базе данных!`,
       );
     }
-    return await modifyOffer(offer);
+    const modifiedOffer = await modifyOffer(offer);
+    return modifiedOffer;
   }
 }

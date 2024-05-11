@@ -30,8 +30,14 @@ export class WishesService {
       ...createWishDto,
       owner: user,
     });
-    this.wishRepository.save(item);
-    return {};
+    try {
+      this.wishRepository.save(item);
+      return {};
+    } catch {
+      throw new InternalServerErrorException(
+        `Ошибка сервера! Не удалось создать новое желание!`,
+      );
+    }
   }
 
   async findLast() {
@@ -132,8 +138,14 @@ export class WishesService {
       );
     }
     protectPrivacyUser(item.owner);
-    await this.wishRepository.update(itemId, updateWishDto);
-    return {};
+    try {
+      await this.wishRepository.update(itemId, updateWishDto);
+      return {};
+    } catch {
+      throw new InternalServerErrorException(
+        `Ошибка сервера! Не удалось отредактировать желание!`,
+      );
+    }
   }
 
   async removeOne(itemId: number, currentUserId: number) {

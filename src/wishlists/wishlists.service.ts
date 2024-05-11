@@ -1,6 +1,7 @@
 import {
   Injectable,
   NotFoundException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -36,32 +37,28 @@ export class WishlistsService {
     return wishlists;
   }
 
-  async create(createWishlistDto: CreateWishlistDto, currentUserId: number) {
-    const wishlist = createWishlistDto;
-    const owner = await this.userRepository.findOne({
-      where: { id: currentUserId },
-    });
-    if (!owner) {
-      throw new NotFoundException(
-        `Пользователь не найден в базе данных!`,
-      );
-    }
+  async create(createWishlistDto: CreateWishlistDto, user: User) {
     let items = [];
-    if (wishlist.itemsId) {
+    if (createWishlistDto.itemsId) {
       items = await validateAndGetWishes(
         this.wishRepository,
         createWishlistDto,
-        currentUserId,
+        user.id,
       );
     }
-    protectPrivacyUser(owner);
-    const newWishlist = this.wishlistRepository.create({
-      ...wishlist,
-      owner,
-      items,
-    });
-    await this.wishlistRepository.save(newWishlist);
-    return newWishlist;
+    protectPrivacyUser(user);
+    try {
+      const newWishlist = await this.wishlistRepository.save({
+        ...createWishlistDto,
+        owner: user,
+        items: items,
+      });
+      return newWishlist;
+    } catch {
+      throw new InternalServerErrorException(
+        `Ошибка сервера! Не удалось создать новый список желаний!`,
+      );
+    }
   }
 
   async findOne(wishlistId: number) {
@@ -70,9 +67,7 @@ export class WishlistsService {
       relations: ['owner', 'items'],
     });
     if (!wishlist) {
-      throw new NotFoundException(
-        `Список желаний не найден в базе данных!`,
-      );
+      throw new NotFoundException(`Список желаний не найден в базе данных!`);
     }
     protectPrivacyUser(wishlist.owner);
     return wishlist;
@@ -90,7 +85,11 @@ export class WishlistsService {
     if (!wishlist) {
       throw new NotFoundException(`Список желаний не найден в базе данных!`);
     }
-    verifyOwner(wishlist.owner.id, currentUserId, `Нельзя редактировать чужой список желаний!`);
+    verifyOwner(
+      wishlist.owner.id,
+      currentUserId,
+      `Нельзя редактировать чужой список желаний!`,
+    );
     if (updateWishlistDto.itemsId) {
       wishlist.items = await validateAndGetWishes(
         this.wishRepository,
@@ -114,13 +113,21 @@ export class WishlistsService {
       relations: ['owner', 'items'],
     });
     if (!wishlist) {
-      throw new NotFoundException(
-        `Список желаний не найден в базе данных!`,
+      throw new NotFoundException(`Список желаний не найден в базе данных!`);
+    }
+    try {
+      verifyOwner(
+        wishlist.owner.id,
+        currentUserId,
+        `Нельзя удалить чужой список желаний!`,
+      );
+      await this.wishlistRepository.delete({ id: wishlistId });
+      protectPrivacyUser(wishlist.owner);
+      return wishlist;
+    } catch (err) {
+      throw new InternalServerErrorException(
+        `Ошибка сервера! Не удалось удалить список желаний!`,
       );
     }
-    verifyOwner(wishlist.owner.id, currentUserId, `Нельзя удалить чужой список желаний!`);
-    await this.wishlistRepository.delete({ id: wishlistId });
-    protectPrivacyUser(wishlist.owner);
-    return wishlist;
   }
 }

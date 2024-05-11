@@ -30,7 +30,7 @@ export class WishlistsController {
     @Body() createWishlistDto: CreateWishlistDto,
     @Req() req: AuthenticatedRequest,
   ) {
-    return this.wishlistsService.create(createWishlistDto, +req.user.id);
+    return this.wishlistsService.create(createWishlistDto, req.user);
   }
 
   @Get(':id')

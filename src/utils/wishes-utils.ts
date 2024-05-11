@@ -4,7 +4,7 @@ import { Wish } from '../wishes/entities/wish.entity';
 import { Offer } from '../offers/entities/offer.entity';
 import { CreateWishlistDto } from '../wishlists/dto/create-wishlist.dto';
 import { UpdateWishlistDto } from '../wishlists/dto/update-wishlist.dto';
-import { protectPrivacyUser, protectPrivacyInArray } from './guard-utils';
+import { protectPrivacyUser } from './guard-utils';
 
 async function getInvalidWishes(
   itemsId: number[],
@@ -56,25 +56,20 @@ export async function validateAndGetWishes(
 // https://app.swaggerhub.com/apis/zlocate/KupiPodariDay/1.0.0#/offers/OffersController_findOne
 export async function modifyOffer(offer: Offer) {
   if (!offer || !offer.owner) {
-    return;
+    return {};
   }
-
-  offer.owner.wishlists?.forEach((wishlist) => {
-    if (wishlist && wishlist.owner) {
-      protectPrivacyUser(wishlist.owner);
-    }
-  });
-
+  protectPrivacyUser(offer.owner, false);
+  offer.owner.wishlists
+    .map((wishlist) => {
+      if (wishlist && wishlist.owner) {
+        protectPrivacyUser(wishlist.owner);
+      }
+    })
+    .filter(Boolean);
   const userWishes =
-    offer.owner.wishes
-      ?.filter((wish) => wish?.name !== undefined)
-      .map((wish) => wish.name) || [];
-
+    offer.owner?.wishes.map((wish) => wish.name).filter(Boolean) || [];
   const userOffers =
-    offer.owner.offers
-      ?.filter((offer) => offer.item?.name !== undefined)
-      .map((offer) => offer.item.name) || [];
-
+    offer.owner?.offers.map((offer) => offer.item.name).filter(Boolean) || [];
   const modifiedOffer = {
     ...offer,
     item: offer.item?.name,
@@ -92,26 +87,30 @@ export async function modifyOffersArr(offers: Offer[]) {
   if (!offers.length) {
     return [];
   }
-  protectPrivacyInArray(offers, false);
-  return Promise.all(
-    offers.map(async (offer) => {
-      return await modifyOffer(offer);
-    }),
+  const modifiedOffers = await Promise.all(
+    offers
+      .map(async (offer) => {
+        return await modifyOffer(offer);
+      })
+      .filter(Boolean),
   );
+  return modifiedOffers;
 }
 
 export async function modifyItemsArr(items: Wish[]) {
   if (!items.length) {
     return [];
   }
-
-  protectPrivacyInArray(items);
-
-  return items.map((item) => {
-    const modifiedOffers = modifyOffersArr(item.offers);
-    return {
-      ...item,
-      offers: modifiedOffers,
-    };
-  });
+  const modifiedItems = await Promise.all(
+    items
+      .map(async (item) => {
+        const modifiedOffers = await modifyOffersArr(item.offers);
+        return {
+          ...item,
+          offers: modifiedOffers,
+        };
+      })
+      .filter(Boolean),
+  );
+  return modifiedItems;
 }

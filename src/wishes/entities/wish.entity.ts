@@ -6,7 +6,8 @@ import {
   UpdateDateColumn,
   OneToMany,
   ManyToOne,
-  JoinColumn,
+  JoinTable,
+  ManyToMany
 } from 'typeorm';
 import {
   IsNotEmpty,
@@ -82,8 +83,7 @@ export class Wish {
   @IsArray()
   offers: Offer[];
 
-  @ManyToOne(() => Wishlist, (wishlist) => wishlist.items, {
-    onDelete: 'SET NULL',
-  })
-  wishlist: Wishlist;
+  @ManyToMany(() => Wishlist)
+  @JoinTable()
+  wishlists: Wishlist[];
 }
