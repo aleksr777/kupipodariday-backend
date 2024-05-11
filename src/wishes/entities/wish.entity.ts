@@ -7,7 +7,7 @@ import {
   OneToMany,
   ManyToOne,
   JoinTable,
-  ManyToMany
+  ManyToMany,
 } from 'typeorm';
 import {
   IsNotEmpty,
@@ -64,7 +64,7 @@ export class Wish {
   @Column({ default: 0, type: 'decimal', precision: 10, scale: 2 })
   @IsNotEmpty()
   @IsNumber()
-  raised: number = 0;
+  raised: number;
 
   @Column()
   @Length(1, 1024)
@@ -74,7 +74,7 @@ export class Wish {
   @Column({ default: 0 })
   @IsNotEmpty()
   @IsNumber()
-  copied: number = 0;
+  copied: number;
 
   @ManyToOne(() => User, (owner) => owner.wishes)
   owner: User;

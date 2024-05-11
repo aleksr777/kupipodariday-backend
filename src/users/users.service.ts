@@ -49,9 +49,7 @@ export class UsersService {
         ...updateUserDto,
       });
       if (!updatedUser) {
-        throw new NotFoundException(
-          `Пользователь не найден в базе данных!`,
-        );
+        throw new NotFoundException(`Пользователь не найден в базе данных!`);
       }
       delete updatedUser.password;
       return updatedUser;
@@ -62,9 +60,7 @@ export class UsersService {
             'Пользователь с такими уникальными данными уже существует в базе данных!',
           );
         case 'EntityNotFound':
-          throw new NotFoundException(
-            `Пользователь не найден в базе данных!`,
-          );
+          throw new NotFoundException(`Пользователь не найден в базе данных!`);
         default:
           throw new InternalServerErrorException(
             `Не удалось обновить данные пользователя в базе данных!`,
@@ -146,7 +142,9 @@ export class UsersService {
   async findWishesByName(username: string) {
     const owner = await this.userRepository.findOne({ where: { username } });
     if (!owner) {
-      throw new NotFoundException(`Пользователь ${username} не найден в базе данных!`);
+      throw new NotFoundException(
+        `Пользователь ${username} не найден в базе данных!`,
+      );
     }
     const items = await this.getWishes(owner.id, username);
     return items;

@@ -36,7 +36,7 @@ export class Offer {
 
   @Column({ default: false })
   @IsBoolean()
-  hidden: boolean = false;
+  hidden: boolean;
 
   @ManyToOne(() => User, (owner) => owner.offers)
   owner: User;

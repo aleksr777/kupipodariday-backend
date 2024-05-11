@@ -70,7 +70,9 @@ export class User {
   @IsArray()
   offers: Offer[];
 
-  @OneToMany(() => Wishlist, (wishlist) => wishlist.owner, { cascade: ['remove'] })
+  @OneToMany(() => Wishlist, (wishlist) => wishlist.owner, {
+    cascade: ['remove'],
+  })
   @IsArray()
   wishlists: Wishlist[];
 }

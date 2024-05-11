@@ -17,5 +17,5 @@ export class CreateWishDto {
   description: string;
 
   @ApiProperty()
-  copied: number = 0;
+  copied: number;
 }
