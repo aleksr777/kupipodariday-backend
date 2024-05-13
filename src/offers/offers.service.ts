@@ -48,12 +48,12 @@ export class OffersService {
     if (sumOffer > item.price) {
       throw new BadRequestException(`${ErrTextOffers.SUM_EXCEEDS_WISH_PRICE}`);
     }
+    await queryRunner.startTransaction();
     const newOffer = this.offerRepository.create({
       ...createOfferDto,
       owner: user,
       item: item,
     });
-    await queryRunner.startTransaction();
     try {
       await queryRunner.manager.save(Wish, {
         ...item,

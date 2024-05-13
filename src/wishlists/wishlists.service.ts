@@ -26,8 +26,6 @@ export class WishlistsService {
     private wishlistRepository: Repository<Wishlist>,
     @InjectRepository(Wish)
     private wishRepository: Repository<Wish>,
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
   ) {}
 
   async findAll() {
