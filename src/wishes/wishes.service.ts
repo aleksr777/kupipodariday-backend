@@ -13,6 +13,7 @@ import { User } from '../users/entities/user.entity';
 import { Offer } from '../offers/entities/offer.entity';
 import { CreateWishDto } from './dto/create-wish.dto';
 import { UpdateWishDto } from './dto/update-wish.dto';
+import { ErrTextWishes } from '../constants/error-messages';
 
 @Injectable()
 export class WishesService {
@@ -31,11 +32,11 @@ export class WishesService {
       owner: user,
     });
     try {
-      this.wishRepository.save(item);
+      await this.wishRepository.save(item);
       return {};
     } catch {
       throw new InternalServerErrorException(
-        `Ошибка сервера! Не удалось создать новое желание!`,
+        ErrTextWishes.SERVER_ERROR_CREATE_WISH,
       );
     }
   }
@@ -58,7 +59,7 @@ export class WishesService {
       ],
     });
     if (!items.length) {
-      throw new NotFoundException(`Подарки в базе данных не найдены!`);
+      throw new NotFoundException(ErrTextWishes.NO_WISHES_FOUND);
     }
     const modifiedItems = modifyItemsArr(items);
     return modifiedItems;
@@ -82,7 +83,7 @@ export class WishesService {
       ],
     });
     if (!items.length) {
-      throw new NotFoundException(`Подарки в базе данных не найдены!`);
+      throw new NotFoundException(ErrTextWishes.NO_WISHES_FOUND);
     }
     const modifiedItems = modifyItemsArr(items);
     return modifiedItems;
@@ -105,9 +106,7 @@ export class WishesService {
       ],
     });
     if (!item) {
-      throw new NotFoundException(
-        `Подарок с ID ${itemId} не найден в базе данных!`,
-      );
+      throw new NotFoundException(`${ErrTextWishes.WISH_NOT_FOUND} ${itemId}!`);
     }
     protectPrivacyUser(item.owner);
     const modifiedOffers = await modifyOffersArr(item.offers);
@@ -125,17 +124,15 @@ export class WishesService {
   ) {
     const item = await this.findOne(itemId);
     if (!item) {
-      throw new NotFoundException(`Желание не найдено в базе данных!`);
+      throw new NotFoundException(ErrTextWishes.WISH_NOT_FOUND_GENERIC);
     }
     verifyOwner(
       item.owner.id,
       currentUserId,
-      `Нельзя редактировать чужое желание!`,
+      ErrTextWishes.CANNOT_EDIT_FOREIGN_WISH,
     );
     if (item.raised !== 0 && item.offers.length > 0) {
-      throw new ForbiddenException(
-        `Желание нельзя редактировать, так как уже есть минимум одно предложение скинуться а него!`,
-      );
+      throw new ForbiddenException(ErrTextWishes.CANNOT_EDIT_WISH_WITH_OFFERS);
     }
     protectPrivacyUser(item.owner);
     try {
@@ -143,7 +140,7 @@ export class WishesService {
       return {};
     } catch {
       throw new InternalServerErrorException(
-        `Ошибка сервера! Не удалось отредактировать желание!`,
+        ErrTextWishes.SERVER_ERROR_UPDATE_WISH,
       );
     }
   }
@@ -167,12 +164,16 @@ export class WishesService {
       ],
     });
     if (!item) {
-      throw new NotFoundException(`Желание не найдено в базе данных!`);
+      throw new NotFoundException(ErrTextWishes.WISH_NOT_FOUND_GENERIC);
     }
-    verifyOwner(item.owner.id, currentUserId, `Нельзя удалить чужое желание!`);
+    verifyOwner(
+      item.owner.id,
+      currentUserId,
+      ErrTextWishes.CANNOT_DELETE_FOREIGN_WISH,
+    );
     if (item.raised > 0) {
       throw new ForbiddenException(
-        `Это желание удалять нельзя, так как уже есть минимум одно предложение скинуться а него!`,
+        ErrTextWishes.CANNOT_DELETE_WISH_WITH_OFFERS,
       );
     }
     await queryRunner.startTransaction();
@@ -190,7 +191,7 @@ export class WishesService {
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw new InternalServerErrorException(
-        `Ошибка сервера! Не удалось удалить желание!`,
+        ErrTextWishes.SERVER_ERROR_DELETE_WISH,
       );
     } finally {
       await queryRunner.release();
@@ -205,12 +206,10 @@ export class WishesService {
       relations: ['owner'],
     });
     if (!originalItem) {
-      throw new NotFoundException(`Желание не найдено в базе данных!`);
+      throw new NotFoundException(ErrTextWishes.WISH_NOT_FOUND_FOR_COPY);
     }
     if (user.id === originalItem.owner.id) {
-      throw new ForbiddenException(
-        `Нельзя копировать своё собственное желание!`,
-      );
+      throw new ForbiddenException(ErrTextWishes.CANNOT_COPY_OWN_WISH);
     }
     const newItem = {
       ...originalItem,
@@ -230,7 +229,7 @@ export class WishesService {
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw new InternalServerErrorException(
-        `Ошибка сервера! Не удалось копировать это желание!`,
+        ErrTextWishes.SERVER_ERROR_COPY_WISH,
       );
     } finally {
       await queryRunner.release();

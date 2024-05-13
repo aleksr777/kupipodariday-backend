@@ -17,6 +17,7 @@ import {
 } from '../utils/guard-utils';
 import { updateProperties } from '../utils/update-properties';
 import { validateAndGetWishes } from '../utils/wishes-utils';
+import { ErrTextWishlists } from '../constants/error-messages';
 
 @Injectable()
 export class WishlistsService {
@@ -56,7 +57,7 @@ export class WishlistsService {
       return newWishlist;
     } catch {
       throw new InternalServerErrorException(
-        `Ошибка сервера! Не удалось создать новый список желаний!`,
+        ErrTextWishlists.SERVER_ERROR_CREATE_WISHLIST,
       );
     }
   }
@@ -67,7 +68,7 @@ export class WishlistsService {
       relations: ['owner', 'items'],
     });
     if (!wishlist) {
-      throw new NotFoundException(`Список желаний не найден в базе данных!`);
+      throw new NotFoundException(ErrTextWishlists.WISHLIST_NOT_FOUND);
     }
     protectPrivacyUser(wishlist.owner);
     return wishlist;
@@ -83,12 +84,12 @@ export class WishlistsService {
       relations: ['owner', 'items'],
     });
     if (!wishlist) {
-      throw new NotFoundException(`Список желаний не найден в базе данных!`);
+      throw new NotFoundException(ErrTextWishlists.WISHLIST_NOT_FOUND);
     }
     verifyOwner(
       wishlist.owner.id,
       currentUserId,
-      `Нельзя редактировать чужой список желаний!`,
+      ErrTextWishlists.CANNOT_EDIT_FOREIGN_WISHLIST,
     );
     if (updateWishlistDto.itemsId) {
       wishlist.items = await validateAndGetWishes(
@@ -113,20 +114,20 @@ export class WishlistsService {
       relations: ['owner', 'items'],
     });
     if (!wishlist) {
-      throw new NotFoundException(`Список желаний не найден в базе данных!`);
+      throw new NotFoundException(ErrTextWishlists.WISHLIST_NOT_FOUND);
     }
     try {
       verifyOwner(
         wishlist.owner.id,
         currentUserId,
-        `Нельзя удалить чужой список желаний!`,
+        ErrTextWishlists.CANNOT_DELETE_FOREIGN_WISHLIST,
       );
       await this.wishlistRepository.delete({ id: wishlistId });
       protectPrivacyUser(wishlist.owner);
       return wishlist;
     } catch (err) {
       throw new InternalServerErrorException(
-        `Ошибка сервера! Не удалось удалить список желаний!`,
+        ErrTextWishlists.SERVER_ERROR_DELETE_WISHLIST,
       );
     }
   }

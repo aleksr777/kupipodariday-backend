@@ -11,6 +11,7 @@ import { CreateOfferDto } from './dto/create-offer.dto';
 import { Wish } from '../wishes/entities/wish.entity';
 import { User } from '../users/entities/user.entity';
 import { modifyOffer, modifyOffersArr } from '../utils/wishes-utils';
+import { ErrTextOffers } from '../constants/error-messages';
 
 @Injectable()
 export class OffersService {
@@ -31,21 +32,21 @@ export class OffersService {
       relations: ['owner'],
     });
     if (!item) {
-      throw new NotFoundException(`Предложение не найдено в базе данных!`);
+      throw new NotFoundException(ErrTextOffers.OFFER_NOT_FOUND);
     }
     if (!item.owner) {
       throw new InternalServerErrorException(
-        `Данные владельца желания не найдены в базе данных!`,
+        ErrTextOffers.OWNER_DATA_NOT_FOUND,
       );
     }
     if (item.owner.id === user.id) {
-      throw new BadRequestException(`Нельзя скинуться на собственное желание!`);
+      throw new BadRequestException(
+        ErrTextOffers.CANNOT_CONTRIBUTE_TO_OWN_WISH,
+      );
     }
     const sumOffer = Number(item.raised) + Number(createOfferDto.amount);
     if (sumOffer > item.price) {
-      throw new BadRequestException(
-        `Сумма ${sumOffer} руб. превышает стоимость желания!`,
-      );
+      throw new BadRequestException(`${ErrTextOffers.SUM_EXCEEDS_WISH_PRICE}`);
     }
     const newOffer = this.offerRepository.create({
       ...createOfferDto,
@@ -64,7 +65,7 @@ export class OffersService {
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw new InternalServerErrorException(
-        `Ошибка сервера! Не удалось создать новое предложение скинуться на желание!`,
+        ErrTextOffers.SERVER_ERROR_CREATE_OFFER,
       );
     } finally {
       await queryRunner.release();
@@ -86,9 +87,7 @@ export class OffersService {
       ],
     });
     if (!offers.length) {
-      throw new NotFoundException(
-        `Предложений скинуться на желание в базе данных не найдено!`,
-      );
+      throw new NotFoundException(ErrTextOffers.NO_OFFERS_FOUND);
     }
     const modifiedOffers = await modifyOffersArr(offers);
     return modifiedOffers;
@@ -110,9 +109,7 @@ export class OffersService {
       ],
     });
     if (!offer) {
-      throw new NotFoundException(
-        `Предложение скинуться на желание не найдено в базе данных!`,
-      );
+      throw new NotFoundException(ErrTextOffers.OFFER_NOT_FOUND_SINGLE);
     }
     const modifiedOffer = await modifyOffer(offer);
     return modifiedOffer;

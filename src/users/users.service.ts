@@ -14,6 +14,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { QueryUserDto } from './dto/query-user.dto';
 import { HashService } from '../hash/hash.service';
+import { ErrTextUsers } from '../constants/error-messages';
 
 @Injectable()
 export class UsersService {
@@ -28,7 +29,7 @@ export class UsersService {
   async findUser(userId: number): Promise<User> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
-      throw new NotFoundException(`Пользователь не найден в базе данных!`);
+      throw new NotFoundException(ErrTextUsers.USER_NOT_FOUND);
     }
     protectPrivacyUser(user);
     return user;
@@ -49,21 +50,19 @@ export class UsersService {
         ...updateUserDto,
       });
       if (!updatedUser) {
-        throw new NotFoundException(`Пользователь не найден в базе данных!`);
+        throw new NotFoundException(ErrTextUsers.SERVER_ERROR_UPDATE_USER);
       }
       delete updatedUser.password;
       return updatedUser;
     } catch (err) {
       switch (err?.code) {
         case '23505':
-          throw new ConflictException(
-            'Пользователь с такими уникальными данными уже существует в базе данных!',
-          );
+          throw new ConflictException(ErrTextUsers.CONFLICT_USER_EXISTS);
         case 'EntityNotFound':
-          throw new NotFoundException(`Пользователь не найден в базе данных!`);
+          throw new NotFoundException(ErrTextUsers.USER_NOT_FOUND);
         default:
           throw new InternalServerErrorException(
-            `Не удалось обновить данные пользователя в базе данных!`,
+            ErrTextUsers.SERVER_ERROR_UPDATE_USER,
           );
       }
     }
@@ -76,8 +75,8 @@ export class UsersService {
     });
     if (!items) {
       const errorDetails = username
-        ? `У пользователя ${username} не найдены желания в базе данных!`
-        : `У текущего пользователя не найдены  желания в базе данных!`;
+        ? `${ErrTextUsers.NO_WISHES_FOUND_FOR_USER} ${username}!`
+        : ErrTextUsers.NO_WISHES_FOUND;
       throw new NotFoundException(errorDetails);
     }
     return items;
@@ -87,7 +86,7 @@ export class UsersService {
     const user = await this.userRepository.findOne({ where: { username } });
     if (!user) {
       throw new NotFoundException(
-        `Пользователь ${username} не найден в базе данных!`,
+        `${ErrTextUsers.USER_NOT_FOUND_BY_NAME} ${username}!`,
       );
     }
     protectPrivacyUser(user);
@@ -103,8 +102,8 @@ export class UsersService {
         { about: Like(`%${query}%`) },
       ],
     });
-    if (!users) {
-      throw new NotFoundException(`Пользователи не найдены в базе данных!`);
+    if (!users.length) {
+      throw new NotFoundException(ErrTextUsers.USERS_NOT_FOUND);
     }
     users.forEach((user) => {
       if (user) {
@@ -128,12 +127,10 @@ export class UsersService {
       return savedUser;
     } catch (err) {
       if (err?.code === '23505') {
-        throw new ConflictException(
-          'Пользователь с такими уникальными данными уже существует!',
-        );
+        throw new ConflictException(ErrTextUsers.CONFLICT_USER_EXISTS_SIMPLE);
       } else {
         throw new InternalServerErrorException(
-          'Не удалось сохранить нового пользователя в базе данных!',
+          ErrTextUsers.SERVER_ERROR_SAVE_USER,
         );
       }
     }
@@ -143,7 +140,7 @@ export class UsersService {
     const owner = await this.userRepository.findOne({ where: { username } });
     if (!owner) {
       throw new NotFoundException(
-        `Пользователь ${username} не найден в базе данных!`,
+        `${ErrTextUsers.USER_NOT_FOUND_BY_NAME} ${username}!`,
       );
     }
     const items = await this.getWishes(owner.id, username);
